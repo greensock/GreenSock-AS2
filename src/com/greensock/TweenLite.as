@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0 beta 5.71
- * DATE: 2012-09-18
+ * VERSION: 12.0 beta 5.72
+ * DATE: 2012-11-16
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -294,7 +294,7 @@ class com.greensock.TweenLite extends Animation {
 				pt = pt._next;
 			}
 			
-			if (_onUpdate) if (!suppressEvents) {
+			if (_onUpdate != null) if (!suppressEvents) {
 				_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
 			}
 			
@@ -542,17 +542,17 @@ class com.greensock.TweenLite extends Animation {
 				return changed;
 			}
 			//NOTE: Add 0.0000000001 to overcome floating point errors that can cause the startTime to be VERY slightly off (when a tween's time() is set for example)
-			var startTime:Number = tween._startTime + 0.0000000001, overlaps:Array = [], oCount:Number = 0, globalStart:Number;
+			var startTime:Number = tween._startTime + 0.0000000001, overlaps:Array = [], oCount:Number = 0, zeroDur:Boolean = (tween._duration == 0), globalStart:Number;
 			i = siblings.length;
 			while (--i > -1) {
 				if ((curTween = siblings[i]) === tween || curTween._gc || curTween._paused) {
 					//ignore
 				} else if (curTween._timeline != tween._timeline) {
-					globalStart = globalStart || _checkOverlap(tween, 0);
-					if (_checkOverlap(curTween, globalStart) === 0) {
+					globalStart = globalStart || _checkOverlap(tween, 0, zeroDur);
+					if (_checkOverlap(curTween, globalStart, zeroDur) === 0) {
 						overlaps[oCount++] = curTween;
 					}
-				} else if (curTween._startTime <= startTime) if (curTween._startTime + curTween.totalDuration() / curTween._timeScale + 0.0000000001 > startTime) if (!((tween._duration == 0 || !curTween._initted) && startTime - curTween._startTime <= 0.0000000002)) {
+				} else if (curTween._startTime <= startTime) if (curTween._startTime + curTween.totalDuration() / curTween._timeScale + 0.0000000001 > startTime) if (!((zeroDur || !curTween._initted) && startTime - curTween._startTime <= 0.0000000002)) {
 					overlaps[oCount++] = curTween;
 				}
 			}
@@ -572,7 +572,7 @@ class com.greensock.TweenLite extends Animation {
 			return changed;
 		}
 		
-		private static function _checkOverlap(tween:Animation, reference:Number):Number {
+		private static function _checkOverlap(tween:Animation, reference:Number, zeroDur:Boolean):Number {
 			var tl:SimpleTimeline = tween._timeline, ts:Number = tl._timeScale, t:Number = tween._startTime;
 			while (tl._timeline) {
 				t += tl._startTime;
@@ -583,7 +583,7 @@ class com.greensock.TweenLite extends Animation {
 				tl = tl._timeline;
 			}
 			t /= ts;
-			return (t > reference) ? t - reference : (!tween._initted && t - reference < 0.0000000002) ? 0.0000000001 : ((t = t + tween.totalDuration() / tween._timeScale / ts) > reference) ? 0 : t - reference - 0.0000000001;
+			return (t > reference) ? t - reference : ((zeroDur && t == reference) || (!tween._initted && t - reference < 0.0000000002)) ? 0.0000000001 : ((t = t + tween.totalDuration() / tween._timeScale / ts) > reference) ? 0 : t - reference - 0.0000000001;
 		}
 		
 	

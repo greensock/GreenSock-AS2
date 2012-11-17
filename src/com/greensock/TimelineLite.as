@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0 beta 5.8
- * DATE: 2012-08-31
+ * VERSION: 12.0 beta 5.72
+ * DATE: 2012-11-16
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -50,19 +50,19 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		
 //---- CONVENIENCE METHODS START --------------------------------------
 		
-		public function to(target:Object, duration:Number, vars:Object, offset:Number, baseTimeOrLabel) {
-			return insert( new TweenLite(target, duration, vars), _parseTimeOrLabel(baseTimeOrLabel) + (offset || 0)); 
+		public function to(target:Object, duration:Number, vars:Object, offsetOrLabel, baseTimeOrLabel) {
+			return insert( new TweenLite(target, duration, vars), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true)); 
 		}
 		
-		public function from(target:Object, duration:Number, vars:Object, offset:Number, baseTimeOrLabel) {
-			return insert( TweenLite.from(target, duration, vars), _parseTimeOrLabel(baseTimeOrLabel) + (offset || 0));
+		public function from(target:Object, duration:Number, vars:Object, offsetOrLabel, baseTimeOrLabel) {
+			return insert( TweenLite.from(target, duration, vars), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
 		}
 		
-		public function fromTo(target:Object, duration:Number, fromVars:Object, toVars:Object, offset:Number, baseTimeOrLabel) {
-			return insert( TweenLite.fromTo(target, duration, fromVars, toVars), _parseTimeOrLabel(baseTimeOrLabel) + (offset || 0));
+		public function fromTo(target:Object, duration:Number, fromVars:Object, toVars:Object, offsetOrLabel, baseTimeOrLabel) {
+			return insert( TweenLite.fromTo(target, duration, fromVars, toVars), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
 		}
 		
-		public function staggerTo(targets:Array, duration:Number, vars:Object, stagger:Number, offset:Number, baseTimeOrLabel, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
+		public function staggerTo(targets:Array, duration:Number, vars:Object, stagger:Number, offsetOrLabel, baseTimeOrLabel, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
 			var tl:TimelineLite = new TimelineLite({onComplete:onCompleteAll, onCompleteParams:onCompleteAllParams, onCompleteScope:onCompleteAllScope});
 			stagger = stagger || 0;
 			for (var i:Number = 0; i < targets.length; i++) {
@@ -71,32 +71,32 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				}
 				tl.insert( new TweenLite(targets[i], duration, _copy(vars)), i * stagger);
 			}
-			return insert(tl, _parseTimeOrLabel(baseTimeOrLabel) + (offset || 0));
+			return insert(tl, _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
 		}
 		
-		public function staggerFrom(targets:Array, duration:Number, vars:Object, stagger:Number, offset:Number, baseTimeOrLabel, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
+		public function staggerFrom(targets:Array, duration:Number, vars:Object, stagger:Number, offsetOrLabel, baseTimeOrLabel, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
 			if (vars.immediateRender == null) {
 				vars.immediateRender = true;
 			}
 			vars.runBackwards = true;
-			return staggerTo(targets, duration, vars, stagger, offset, baseTimeOrLabel, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
+			return staggerTo(targets, duration, vars, stagger, offsetOrLabel, baseTimeOrLabel, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
 		}
 		
-		public function staggerFromTo(targets:Array, duration:Number, fromVars:Object, toVars:Object, stagger:Number, offset:Number, baseTimeOrLabel, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
+		public function staggerFromTo(targets:Array, duration:Number, fromVars:Object, toVars:Object, stagger:Number, offsetOrLabel, baseTimeOrLabel, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
 			toVars.startAt = fromVars;
 			if (fromVars.immediateRender) {
 				toVars.immediateRender = true;
 			}
-			return staggerTo(targets, duration, toVars, stagger, offset, baseTimeOrLabel, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
+			return staggerTo(targets, duration, toVars, stagger, offsetOrLabel, baseTimeOrLabel, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
 		}
 		
-		public function call(callback:Function, params:Array, scope:Object, offset:Number, baseTimeOrLabel) {
-			return insert( TweenLite.delayedCall(0, callback, params, scope), _parseTimeOrLabel(baseTimeOrLabel) + (offset || 0));
+		public function call(callback:Function, params:Array, scope:Object, offsetOrLabel, baseTimeOrLabel) {
+			return insert( TweenLite.delayedCall(0, callback, params, scope), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
 		}
 		
-		public function set(target:Object, vars:Object, offset:Number, baseTimeOrLabel) {
+		public function set(target:Object, vars:Object, offsetOrLabel, baseTimeOrLabel) {
 			vars.immediateRender = false;
-			return insert( new TweenLite(target, 0, vars), _parseTimeOrLabel(baseTimeOrLabel) + (offset || 0));
+			return insert( new TweenLite(target, 0, vars), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
 		}
 		
 		private static function _copy(vars:Object):Object {
@@ -140,7 +140,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			} else if (value instanceof Array) {
 				return insertMultiple(Array(value), timeOrLabel);
 			} else if (typeof(value) == "string") {
-				return addLabel(String(value), _parseTimeOrLabel(timeOrLabel || 0, true));
+				return addLabel(String(value), _parseTimeOrLabel(timeOrLabel || 0, 0, true));
 			} else if (typeof(value) == "function") {
 				value = TweenLite.delayedCall(0, Function(value));
 			} else {
@@ -148,7 +148,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				return this;
 			}
 			
-			super.insert(value, _parseTimeOrLabel(timeOrLabel || 0, true));
+			super.insert(value, _parseTimeOrLabel(timeOrLabel || 0, 0, true));
 			
 			//if the timeline has already ended but the inserted tween/timeline extends the duration, we should enable this timeline again so that it renders properly.  
 			if (_gc) if (!_paused) if (_time == _duration) if (_time < duration()) {
@@ -181,14 +181,14 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			return kill(null, value);
 		}
 		
-		public function append(value, offset:Number) {
-			return insert(value, duration() + (Number(offset) || 0));
+		public function append(value, offsetOrLabel) {
+			return insert(value, _parseTimeOrLabel(null, offsetOrLabel, true));
 		}
 		
 		public function insertMultiple(tweens:Array, timeOrLabel, align:String, stagger:Number) {
 			align = align || "normal";
 			stagger = stagger || 0;
-			var i:Number, tween, curTime:Number = _parseTimeOrLabel(timeOrLabel || 0, true), l:Number = tweens.length;
+			var i:Number, tween, curTime:Number = _parseTimeOrLabel(timeOrLabel || 0, 0, true), l:Number = tweens.length;
 			for (i = 0; i < l; i++) {
 				if ((tween = tweens[i]) instanceof Array) {
 					tween = new TimelineLite({tweens:tween});
@@ -206,8 +206,8 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			return _uncache(true);
 		}
 		
-		public function appendMultiple(tweens:Array, offset:Number, align:String, stagger:Number) {
-			return insertMultiple(tweens, duration() + (Number(offset) || 0), align, stagger);
+		public function appendMultiple(tweens:Array, offsetOrLabel, align:String, stagger:Number) {
+			return insertMultiple(tweens, _parseTimeOrLabel(null, offsetOrLabel, true), align, stagger);
 		}
 		
 		public function addLabel(label:String, time:Number) {
@@ -224,20 +224,24 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			return (_labels[label] != null) ? _labels[label] : -1;
 		}
 		
-		private function _parseTimeOrLabel(timeOrLabel, appendIfAbsent:Boolean):Number {
+		private function _parseTimeOrLabel(timeOrLabel, offsetOrLabel, appendIfAbsent:Boolean):Number {
+			if (typeof(offsetOrLabel) === "string") {
+				return _parseTimeOrLabel(offsetOrLabel, ((appendIfAbsent && typeof(timeOrLabel) === "number" && _labels[offsetOrLabel] == null) ? timeOrLabel - duration() : 0), appendIfAbsent);
+			}
+			offsetOrLabel = offsetOrLabel || 0;
 			if (timeOrLabel == null) {
-				return duration();
+				return duration() + offsetOrLabel;
 			} else if (typeof(timeOrLabel) === "string") {
 				if (_labels[timeOrLabel] == null) {
-					return (appendIfAbsent) ? (_labels[timeOrLabel] = duration()) : 0;
+					return (appendIfAbsent) ? (_labels[timeOrLabel] = duration() + offsetOrLabel) : offsetOrLabel;
 				}
-				return _labels[timeOrLabel];
+				return _labels[timeOrLabel] + offsetOrLabel;
 			}
-			return Number(timeOrLabel);
+			return Number(timeOrLabel) + offsetOrLabel;
 		}
 		
 		public function seek(timeOrLabel, suppressEvents:Boolean) {
-			return totalTime(_parseTimeOrLabel(timeOrLabel, false), (suppressEvents != false));
+			return totalTime(_parseTimeOrLabel(timeOrLabel), (suppressEvents != false));
 		}
 		
 		public function stop() {
@@ -341,7 +345,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				}
 			}
 			
-			if (_onUpdate) if (!suppressEvents) {
+			if (_onUpdate != null) if (!suppressEvents) {
 				_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
 			}
 			
