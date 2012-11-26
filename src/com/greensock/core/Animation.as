@@ -285,7 +285,7 @@ class com.greensock.core.Animation {
 			}
 			_duration = _totalDuration = value;
 			_uncache(true); //true in case it's a TweenMax or TimelineMax that has a repeat - we'll need to refresh the totalDuration. 
-			if (_timeline.smoothChildTiming) if (_active) if (value != 0) {
+			if (_timeline.smoothChildTiming) if (_time > 0) if (_time < _duration) if (value != 0) {
 				totalTime(_totalTime * (value / _duration), true);
 			}
 			return this;
