@@ -1,5 +1,17 @@
-CHANGE LOG : GREENSOCK TWEENING PLATFORM
+CHANGE LOG : GREENSOCK ANIMATION PLATFORM
 ----------------------------------------
+
+2013-01-09
+---------------------------------------------
+Moved change log to https://github.com/greensock/GreenSock-AS2/commits/master
+
+2012-12-24
+---------------------------------------------
+	- Added ability for TransformAroundPointPlugin to consistently apply transform changes according to the local coordinate system (with pointIsLocal:true) even if the target's position is manually changed during the course of the tween. 
+	
+2012-10-26
+---------------------------------------------
+	- Added functionality to append() and all convenience methods of TimelineLite/Max so that the "offset" parameter can now be a string to indicate a label. If the label isn't found, one will be created and appended to the timeline for convenience. 
 
 2012-09-17
 ---------------------------------------------

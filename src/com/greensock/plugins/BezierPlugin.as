@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.11
- * DATE: 2012-07-23
+ * VERSION: 12.12
+ * DATE: 2013-01-09
  * AS2
  * UPDATES & DOCS AT: http://www.greensock.com
  **/
@@ -10,7 +10,7 @@ import com.greensock.plugins.core.Segment;
 /**
  * <p><strong>See AS3 files for full ASDocs</strong></p>
  * 
- * <p><strong>Copyright 2008-2012, GreenSock. All rights reserved.</strong> This work is subject to the terms in <a href="http://www.greensock.com/terms_of_use.html">http://www.greensock.com/terms_of_use.html</a> or for <a href="http://www.greensock.com/club/">Club GreenSock</a> members, the software agreement that was issued with the membership.</p>
+ * <p><strong>Copyright 2008-2013, GreenSock. All rights reserved.</strong> This work is subject to the terms in <a href="http://www.greensock.com/terms_of_use.html">http://www.greensock.com/terms_of_use.html</a> or for <a href="http://www.greensock.com/club/">Club GreenSock</a> members, the software agreement that was issued with the membership.</p>
  * 
  * @author Jack Doyle, jack@greensock.com
  */
@@ -113,10 +113,32 @@ class com.greensock.plugins.BezierPlugin extends TweenPlugin {
 			}
 			var obj:Object = {},
 				props:Array = [],
-				i:Number, p:String, j:Number, a:Array, l:Number, r:Number;
+				first:Object = prepend || values[0],
+				i:Number, p:String, j:Number, a:Array, l:Number, r:Number, seamless:Boolean, last:Object;
 			correlate = (typeof(correlate) === "string") ? ","+correlate+"," : ",_x,_y,x,y,z,";
 			for (p in values[0]) {
 				props.push(p);
+			}
+			//check to see if the last and first values are identical (well, within 0.05). If so, make seamless by appending the second element to the very end of the values array and the 2nd-to-last element to the very beginning (we'll remove those segments later)
+			if (values.length > 1) {
+				last = values[values.length - 1];
+				seamless = true;
+				i = props.length;
+				while (--i > -1) {
+					p = props[i];
+					if (Math.abs(first[p] - last[p]) > 0.05) { //build in a tolerance of +/-0.05 to accommodate rounding errors. For example, if you set an object's position to 4.945, Flash will make it 4.9
+						seamless = false;
+						break;
+					}
+				}
+				if (seamless) {
+					values = values.concat(); //duplicate the array to avoid contaminating the original which the user may be reusing for other tweens
+					if (prepend) {
+						values.unshift(prepend);
+					}
+					values.push(values[1]);
+					prepend = values[values.length - 3];
+				}
 			}
 			_r1.length = _r2.length = _r3.length = 0;
 			i = props.length;
@@ -148,9 +170,15 @@ class com.greensock.plugins.BezierPlugin extends TweenPlugin {
 				}
 			}
 			i = props.length;
+			j = quadratic ? 4 : 1;
 			while (--i > -1) {
 				p = props[i];
-				_calculateControlPoints(obj[p], curviness, quadratic, basic, _corProps[p]); //this method requires that _parseAnchors() and _setSegmentRatios() ran first so that _r1, _r2, and _r3 values are populated for all properties
+				a = obj[p];
+				_calculateControlPoints(a, curviness, quadratic, basic, _corProps[p]); //this method requires that _parseAnchors() and _setSegmentRatios() ran first so that _r1, _r2, and _r3 values are populated for all properties
+				if (seamless) {
+					a.splice(0, j);
+					a.splice(a.length - j, j);
+				}
 			}
 			return obj;
 		}
