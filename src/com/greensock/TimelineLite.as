@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0 beta 5.72
- * DATE: 2012-11-16
+ * VERSION: 12.0 beta 5.75
+ * DATE: 2013-01-10
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -148,7 +148,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				return this;
 			}
 			
-			super.insert(value, _parseTimeOrLabel(timeOrLabel || 0, 0, true));
+			super.insert(value, _parseTimeOrLabel(timeOrLabel || 0, 0, true, value));
 			
 			//if the timeline has already ended but the inserted tween/timeline extends the duration, we should enable this timeline again so that it renders properly.  
 			if (_gc) if (!_paused) if (_time == _duration) if (_time < duration()) {
@@ -182,13 +182,13 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		}
 		
 		public function append(value, offsetOrLabel) {
-			return insert(value, _parseTimeOrLabel(null, offsetOrLabel, true));
+			return insert(value, _parseTimeOrLabel(null, offsetOrLabel, true, value));
 		}
 		
 		public function insertMultiple(tweens:Array, timeOrLabel, align:String, stagger:Number) {
 			align = align || "normal";
 			stagger = stagger || 0;
-			var i:Number, tween, curTime:Number = _parseTimeOrLabel(timeOrLabel || 0, 0, true), l:Number = tweens.length;
+			var i:Number, tween, curTime:Number = _parseTimeOrLabel(timeOrLabel || 0, 0, true, tweens), l:Number = tweens.length;
 			for (i = 0; i < l; i++) {
 				if ((tween = tweens[i]) instanceof Array) {
 					tween = new TimelineLite({tweens:tween});
@@ -207,7 +207,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		}
 		
 		public function appendMultiple(tweens:Array, offsetOrLabel, align:String, stagger:Number) {
-			return insertMultiple(tweens, _parseTimeOrLabel(null, offsetOrLabel, true), align, stagger);
+			return insertMultiple(tweens, _parseTimeOrLabel(null, offsetOrLabel, true, tweens), align, stagger);
 		}
 		
 		public function addLabel(label:String, time:Number) {
@@ -224,7 +224,18 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			return (_labels[label] != null) ? _labels[label] : -1;
 		}
 		
-		private function _parseTimeOrLabel(timeOrLabel, offsetOrLabel, appendIfAbsent:Boolean):Number {
+		private function _parseTimeOrLabel(timeOrLabel, offsetOrLabel, appendIfAbsent:Boolean, ignore:Object):Number {
+			//if we're about to add a tween/timeline (or an array of them) that's already a child of this timeline, we should remove it first so that it doesn't contaminate the duration().
+			if (ignore instanceof Animation && ignore.timeline === this) {
+				remove(ignore);
+			} else if (ignore instanceof Array) {
+				var i:Number = ignore.length;
+				while (--i > -1) {
+					if (ignore[i] instanceof Animation && ignore[i].timeline === this) {
+						remove(ignore[i]);
+					}
+				}
+			}
 			if (typeof(offsetOrLabel) === "string") {
 				return _parseTimeOrLabel(offsetOrLabel, ((appendIfAbsent && typeof(timeOrLabel) === "number" && _labels[offsetOrLabel] == null) ? timeOrLabel - duration() : 0), appendIfAbsent);
 			}
