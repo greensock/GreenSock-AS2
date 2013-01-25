@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0 beta 5.72
- * DATE: 2012-11-16
+ * VERSION: 12.0.0
+ * DATE: 2013-01-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -20,7 +20,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:Number = 12.0;
+		public static var version:String = "12.0.0";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -586,5 +586,7 @@ class com.greensock.TweenLite extends Animation {
 			return (t > reference) ? t - reference : ((zeroDur && t == reference) || (!tween._initted && t - reference < 0.0000000002)) ? 0.0000000001 : ((t = t + tween.totalDuration() / tween._timeScale / ts) > reference) ? 0 : t - reference - 0.0000000001;
 		}
 		
+	
+}
 	
 }

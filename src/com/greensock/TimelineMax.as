@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0 beta 5.72
- * DATE: 2012-11-16
+ * VERSION: 12.0.0
+ * DATE: 2013-01-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:Number = 12.0;
+		public static var version:String = "12.0.0";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -47,17 +47,17 @@ class com.greensock.TimelineMax extends TimelineLite {
 			return super.invalidate();
 		}
 		
-		public function addCallback(callback:Function, timeOrLabel, params:Array, scope:Object):TimelineMax {
-			return TimelineMax( insert( TweenLite.delayedCall(0, callback, params, scope), timeOrLabel) );
+		public function addCallback(callback:Function, position, params:Array, scope:Object):TimelineMax {
+			return TimelineMax( add( TweenLite.delayedCall(0, callback, params, scope), position) );
 		}
 		
-		public function removeCallback(callback:Function, timeOrLabel):TimelineMax {
-			if (timeOrLabel == null) {
+		public function removeCallback(callback:Function, position):TimelineMax {
+			if (position == null) {
 				_kill(null, callback);
 			} else {
 				var a:Array = getTweensOf(callback, false),
 					i:Number = a.length,
-					time:Number = _parseTimeOrLabel(timeOrLabel);
+					time:Number = _parseTimeOrLabel(position);
 				while (--i > -1) {
 					if (a[i]._startTime === time) {
 						a[i]._enabled(false, false);
@@ -67,13 +67,13 @@ class com.greensock.TimelineMax extends TimelineLite {
 			return this;
 		}
 		
-		public function tweenTo(timeOrLabel, vars:Object):TweenLite {
+		public function tweenTo(position, vars:Object):TweenLite {
 			vars = vars || {};
 			var copy:Object = {ease:_easeNone, overwrite:2, useFrames:usesFrames(), immediateRender:false};
 			for (var p:String in vars) {
 				copy[p] = vars[p];
 			}
-			copy.time = _parseTimeOrLabel(timeOrLabel);
+			copy.time = _parseTimeOrLabel(position);
 			var t:TweenLite = new TweenLite(this, (Math.abs(Number(copy.time) - _time) / _timeScale) || 0.001, copy);
 			copy.onStart = function():Void {
 				t.target.paused(true);
@@ -87,10 +87,10 @@ class com.greensock.TimelineMax extends TimelineLite {
 			return t;
 		}
 		
-		public function tweenFromTo(fromTimeOrLabel, toTimeOrLabel, vars:Object):TweenLite {
+		public function tweenFromTo(fromPosition, toPosition, vars:Object):TweenLite {
 			vars = vars || {};
-			vars.startAt = {time:_parseTimeOrLabel(fromTimeOrLabel)};
-			var t:TweenLite = tweenTo(toTimeOrLabel, vars);
+			vars.startAt = {time:_parseTimeOrLabel(fromPosition)};
+			var t:TweenLite = tweenTo(toPosition, vars);
 			return t.duration((Math.abs( t.vars.time - t.vars.startAt.time) / _timeScale) || 0.001);
 		}
 		
@@ -429,6 +429,10 @@ class com.greensock.TimelineMax extends TimelineLite {
 			if (!arguments.length) {
 				return getLabelBefore(_time + 0.00000001);
 			}
+			return seek(value, true);
+		}
+	
+}		}
 			return seek(value, true);
 		}
 	

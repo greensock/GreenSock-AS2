@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0 (alpha 3)
- * DATE: 2012-02-23
+ * VERSION: 12.0.0
+ * DATE: 2013-01-21
  * AS2
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -17,7 +17,7 @@ import com.greensock.plugins.RoundPropsPlugin;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.plugins.TweenPlugin {
-		public static var version:Number = 12.0;
+		public static var version:String = "12.0.0";
 		public static var API:Number = 2.0; //If the API/Framework for plugins changes in the future, this number helps determine compatibility
 		public var _propName:String;
 		public var _overwriteProps:Array;

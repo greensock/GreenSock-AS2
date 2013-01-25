@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0 beta 5.75
- * DATE: 2013-01-10
+ * VERSION: 12.0.0
+ * DATE: 2013-01-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:Number = 12.0;
+		public static var version:String = "12.0.0";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -43,60 +43,60 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				}
 			}
 			if (this.vars.tweens instanceof Array) {
-				this.insertMultiple(this.vars.tweens, 0, this.vars.align || "normal", this.vars.stagger || 0);
+				this.add(this.vars.tweens, 0, this.vars.align || "normal", this.vars.stagger || 0);
 			}
 		}
 
 		
 //---- CONVENIENCE METHODS START --------------------------------------
 		
-		public function to(target:Object, duration:Number, vars:Object, offsetOrLabel, baseTimeOrLabel) {
-			return insert( new TweenLite(target, duration, vars), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true)); 
+		public function to(target:Object, duration:Number, vars:Object, position) {
+			return add( new TweenLite(target, duration, vars), position); 
 		}
 		
-		public function from(target:Object, duration:Number, vars:Object, offsetOrLabel, baseTimeOrLabel) {
-			return insert( TweenLite.from(target, duration, vars), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
+		public function from(target:Object, duration:Number, vars:Object, position) {
+			return add( TweenLite.from(target, duration, vars), position);
 		}
 		
-		public function fromTo(target:Object, duration:Number, fromVars:Object, toVars:Object, offsetOrLabel, baseTimeOrLabel) {
-			return insert( TweenLite.fromTo(target, duration, fromVars, toVars), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
+		public function fromTo(target:Object, duration:Number, fromVars:Object, toVars:Object, position) {
+			return add( TweenLite.fromTo(target, duration, fromVars, toVars), position);
 		}
 		
-		public function staggerTo(targets:Array, duration:Number, vars:Object, stagger:Number, offsetOrLabel, baseTimeOrLabel, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
+		public function staggerTo(targets:Array, duration:Number, vars:Object, stagger:Number, position, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
 			var tl:TimelineLite = new TimelineLite({onComplete:onCompleteAll, onCompleteParams:onCompleteAllParams, onCompleteScope:onCompleteAllScope});
 			stagger = stagger || 0;
 			for (var i:Number = 0; i < targets.length; i++) {
 				if (vars.startAt != null) {
 					vars.startAt = _copy(vars.startAt);
 				}
-				tl.insert( new TweenLite(targets[i], duration, _copy(vars)), i * stagger);
+				tl.add( new TweenLite(targets[i], duration, _copy(vars)), i * stagger);
 			}
-			return insert(tl, _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
+			return add(tl, position);
 		}
 		
-		public function staggerFrom(targets:Array, duration:Number, vars:Object, stagger:Number, offsetOrLabel, baseTimeOrLabel, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
+		public function staggerFrom(targets:Array, duration:Number, vars:Object, stagger:Number, position, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
 			if (vars.immediateRender == null) {
 				vars.immediateRender = true;
 			}
 			vars.runBackwards = true;
-			return staggerTo(targets, duration, vars, stagger, offsetOrLabel, baseTimeOrLabel, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
+			return staggerTo(targets, duration, vars, stagger, position, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
 		}
 		
-		public function staggerFromTo(targets:Array, duration:Number, fromVars:Object, toVars:Object, stagger:Number, offsetOrLabel, baseTimeOrLabel, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
+		public function staggerFromTo(targets:Array, duration:Number, fromVars:Object, toVars:Object, stagger:Number, position, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
 			toVars.startAt = fromVars;
 			if (fromVars.immediateRender) {
 				toVars.immediateRender = true;
 			}
-			return staggerTo(targets, duration, toVars, stagger, offsetOrLabel, baseTimeOrLabel, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
+			return staggerTo(targets, duration, toVars, stagger, position, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
 		}
 		
-		public function call(callback:Function, params:Array, scope:Object, offsetOrLabel, baseTimeOrLabel) {
-			return insert( TweenLite.delayedCall(0, callback, params, scope), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
+		public function call(callback:Function, params:Array, scope:Object, position) {
+			return add( TweenLite.delayedCall(0, callback, params, scope), position);
 		}
 		
-		public function set(target:Object, vars:Object, offsetOrLabel, baseTimeOrLabel) {
+		public function set(target:Object, vars:Object, position) {
 			vars.immediateRender = false;
-			return insert( new TweenLite(target, 0, vars), _parseTimeOrLabel(baseTimeOrLabel, offsetOrLabel, true));
+			return add( new TweenLite(target, 0, vars), position);
 		}
 		
 		private static function _copy(vars:Object):Object {
@@ -124,34 +124,57 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			while (tween) {
 				next = tween._next;
 				if (!ignoreDelayedCalls || !(tween instanceof TweenLite && TweenLite(tween).target == tween.vars.onComplete)) {
-					tl.insert(tween, tween._startTime - tween._delay);
+					tl.add(tween, tween._startTime - tween._delay);
 				}
 				tween = next;
 			}
-			root.insert(tl, 0);
+			root.add(tl, 0);
 			return tl;
 		}
 		
 //---- CONVENIENCE METHODS END ----------------------------------------
 		
-		public function insert(value, timeOrLabel) {
+		public function add(value, position, align:String, stagger:Number) {
+			if (typeof(position) !== "number") {
+				position = _parseTimeOrLabel(position, 0, true, value);
+			}
 			if (value instanceof Animation) {
 				//continue...
 			} else if (value instanceof Array) {
-				return insertMultiple(Array(value), timeOrLabel);
-			} else if (typeof(value) == "string") {
-				return addLabel(String(value), _parseTimeOrLabel(timeOrLabel || 0, 0, true));
-			} else if (typeof(value) == "function") {
-				value = TweenLite.delayedCall(0, Function(value));
+				align = align || "normal";
+				stagger = stagger || 0;
+				var i:Number, 
+				curTime:Number = Number(position), 
+					l:Number = value.length, 
+					child;
+				for (i = 0; i < l; i++) {
+					if ((child = value[i]) instanceof Array) {
+						child = new TimelineLite({tweens:child});
+					}
+					add(child, curTime);
+					if (typeof(child) === "string" || typeof(child) === "function") {
+						//do nothing
+					} else if (align === "sequence") {
+						curTime = child._startTime + (child.totalDuration() / child._timeScale);
+					} else if (align === "start") {
+						child._startTime -= child.delay();
+					}
+					curTime += stagger;
+				}
+				return _uncache(true);
+			} else if (typeof(value) === "string") {
+				return addLabel(String(value), position);
+			} else if (typeof(value) === "function") {
+				value = TweenLite.delayedCall(0, value);
 			} else {
-				trace("ERROR: Cannot insert() " + value + " into the TimelineLite/Max because it is neither a tween, timeline, function, nor a String.");
+				trace("Cannot add " + value + " into the TimelineLite/Max: it is neither a tween, timeline, function, nor a String.");
 				return this;
 			}
 			
-			super.insert(value, _parseTimeOrLabel(timeOrLabel || 0, 0, true, value));
+			super.add(value, position);
 			
 			//if the timeline has already ended but the inserted tween/timeline extends the duration, we should enable this timeline again so that it renders properly.  
-			if (_gc) if (!_paused) if (_time == _duration) if (_time < duration()) {
+			if (_gc) if (!_paused) if (_time === _duration) if (_time < duration()) {
 				//in case any of the anscestors had completed but should now be enabled...
 				var tl:SimpleTimeline = this;
 				while (tl._gc && tl._timeline) {
@@ -182,36 +205,19 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		}
 		
 		public function append(value, offsetOrLabel) {
-			return insert(value, _parseTimeOrLabel(null, offsetOrLabel, true, value));
+			return add(value, _parseTimeOrLabel(null, offsetOrLabel, true, value));
 		}
 		
 		public function insertMultiple(tweens:Array, timeOrLabel, align:String, stagger:Number) {
-			align = align || "normal";
-			stagger = stagger || 0;
-			var i:Number, tween, curTime:Number = _parseTimeOrLabel(timeOrLabel || 0, 0, true, tweens), l:Number = tweens.length;
-			for (i = 0; i < l; i++) {
-				if ((tween = tweens[i]) instanceof Array) {
-					tween = new TimelineLite({tweens:tween});
-				}
-				insert(tween, curTime);
-				if (typeof(tween) === "string" || typeof(tween) === "function") {
-					//do nothing
-				} else if (align === "sequence") {
-					curTime = tween._startTime + (tween.totalDuration() / tween._timeScale);
-				} else if (align === "start") {
-					tween._startTime -= tween.delay();
-				}
-				curTime += stagger;
-			}
-			return _uncache(true);
+			return add(tweens, timeOrLabel || 0, align, stagger);
 		}
 		
 		public function appendMultiple(tweens:Array, offsetOrLabel, align:String, stagger:Number) {
-			return insertMultiple(tweens, _parseTimeOrLabel(null, offsetOrLabel, true, tweens), align, stagger);
+			return add(tweens, _parseTimeOrLabel(null, offsetOrLabel, true, tweens), align, stagger);
 		}
 		
-		public function addLabel(label:String, time:Number) {
-			_labels[label] = time;
+		public function addLabel(label:String, position) {
+			_labels[label] = _parseTimeOrLabel(position);
 			return this;
 		}
 	
@@ -225,11 +231,12 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		}
 		
 		private function _parseTimeOrLabel(timeOrLabel, offsetOrLabel, appendIfAbsent:Boolean, ignore:Object):Number {
+			var i:Number;
 			//if we're about to add a tween/timeline (or an array of them) that's already a child of this timeline, we should remove it first so that it doesn't contaminate the duration().
 			if (ignore instanceof Animation && ignore.timeline === this) {
 				remove(ignore);
 			} else if (ignore instanceof Array) {
-				var i:Number = ignore.length;
+				i = ignore.length;
 				while (--i > -1) {
 					if (ignore[i] instanceof Animation && ignore[i].timeline === this) {
 						remove(ignore[i]);
@@ -237,34 +244,39 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				}
 			}
 			if (typeof(offsetOrLabel) === "string") {
-				return _parseTimeOrLabel(offsetOrLabel, ((appendIfAbsent && typeof(timeOrLabel) === "number" && _labels[offsetOrLabel] == null) ? timeOrLabel - duration() : 0), appendIfAbsent);
+				return _parseTimeOrLabel(offsetOrLabel, (appendIfAbsent && typeof(timeOrLabel) === "number" && _labels[offsetOrLabel] == null) ? timeOrLabel - duration() : 0, appendIfAbsent);
 			}
 			offsetOrLabel = offsetOrLabel || 0;
-			if (timeOrLabel == null) {
-				return duration() + offsetOrLabel;
-			} else if (typeof(timeOrLabel) === "string") {
-				if (_labels[timeOrLabel] == null) {
-					return (appendIfAbsent) ? (_labels[timeOrLabel] = duration() + offsetOrLabel) : offsetOrLabel;
+			if (typeof(timeOrLabel) === "string" && (isNaN(timeOrLabel) || _labels[timeOrLabel] != null)) { //if the string is a number like "1", check to see if there's a label with that name, otherwise interpret it as a number (absolute value).
+				i = timeOrLabel.indexOf("=");
+				if (i === -1) {
+					if (_labels[timeOrLabel] == null) {
+						return appendIfAbsent ? (_labels[timeOrLabel] = duration() + offsetOrLabel) : offsetOrLabel;
+					}
+					return _labels[timeOrLabel] + offsetOrLabel;
 				}
-				return _labels[timeOrLabel] + offsetOrLabel;
+				offsetOrLabel = parseInt(timeOrLabel.charAt(i-1) + "1", 10) * Number(timeOrLabel.substr(i+1));
+				timeOrLabel = (i > 1) ? _parseTimeOrLabel(timeOrLabel.substr(0, i-1), 0, appendIfAbsent) : duration();
+			} else if (timeOrLabel == null) {
+				timeOrLabel = duration();
 			}
 			return Number(timeOrLabel) + offsetOrLabel;
 		}
 		
-		public function seek(timeOrLabel, suppressEvents:Boolean) {
-			return totalTime(_parseTimeOrLabel(timeOrLabel), (suppressEvents != false));
+		public function seek(position, suppressEvents:Boolean) {
+			return totalTime((typeof(position) === "number") ? Number(position) : _parseTimeOrLabel(position), (suppressEvents != false));
 		}
 		
 		public function stop() {
 			return paused(true);
 		}
 	
-		public function gotoAndPlay(timeOrLabel, suppressEvents:Boolean) {
-			return super.play(timeOrLabel, suppressEvents);
+		public function gotoAndPlay(position, suppressEvents:Boolean) {
+			return super.play(position, suppressEvents);
 		}
 		
-		public function gotoAndStop(timeOrLabel, suppressEvents:Boolean) {
-			return pause(timeOrLabel, suppressEvents);
+		public function gotoAndStop(position, suppressEvents:Boolean) {
+			return pause(position, suppressEvents);
 		}
 		
 		public function render(time:Number, suppressEvents:Boolean, force:Boolean):Void {
@@ -534,7 +546,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 						next = tween._next; //record it here in case the tween changes position in the sequence...
 						
 						if (tween._startTime < prevStart && _sortChildren) { //in case one of the tweens shifted out of order, it needs to be re-inserted into the correct position in the sequence
-							insert(tween, tween._startTime - tween._delay);
+							add(tween, tween._startTime - tween._delay);
 						} else {
 							prevStart = tween._startTime;
 						}
@@ -570,6 +582,9 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		
 		public function rawTime():Number {
 			return (_paused || (_totalTime !== 0 && _totalTime !== _totalDuration)) ? _totalTime : (_timeline.rawTime() - _startTime) * _timeScale;
+		}
+	
+}artTime) * _timeScale;
 		}
 	
 }

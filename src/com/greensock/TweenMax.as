@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0 beta 5.72
- * DATE: 2012-11-16
+ * VERSION: 12.0.0
+ * DATE: 2013-01-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:Number = 12.0;
+		public static var version:String = "12.0.0";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero
@@ -58,9 +58,6 @@ class com.greensock.TweenMax extends TweenLite {
 		
 		public function TweenMax(target:Object, duration:Number, vars:Object) {
 			super(target, duration, vars);
-			if (TweenLite.version < 12) {
-				trace("TweenMax warning: Please update your TweenLite class or try deleting your ASO files. TweenMax requires a more recent version. Download updates at http://www.greensock.com/tweenmax/");
-			}
 			_cycle = 0;
 			_yoyo = (this.vars.yoyo == true);
 			_repeat = this.vars.repeat || 0;
@@ -533,6 +530,14 @@ class com.greensock.TweenMax extends TweenLite {
 			var tl:SimpleTimeline = _rootTimeline,
 				t:Number = (getTimer() / 1000);
 			tl._startTime = t - ((t - tl._startTime) * tl._timeScale / value);
+			tl = _rootFramesTimeline;
+			t = _rootFrame;
+			tl._startTime = t - ((t - tl._startTime) * tl._timeScale / value);
+			_rootFramesTimeline._timeScale = _rootTimeline._timeScale = value;
+			return value;
+		}
+	
+} tl._timeScale / value);
 			tl = _rootFramesTimeline;
 			t = _rootFrame;
 			tl._startTime = t - ((t - tl._startTime) * tl._timeScale / value);

@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0 beta 1
- * DATE: 2012-02-20
+ * VERSION: 12.0.0
+ * DATE: 2013-01-21
  * AS3 (AS2 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -29,38 +29,42 @@ class com.greensock.core.SimpleTimeline extends Animation {
 		}
 		
 		public function insert(tween, time) {
-			tween._startTime = Number(time || 0) + tween._delay;
-			if (tween._paused) if (this != tween._timeline) { //we only adjust the _pauseTime if it wasn't in this timeline already. Remember, sometimes a tween will be inserted again into the same timeline when its startTime is changed so that the tweens in the TimelineLite/Max are re-ordered properly in the linked list (so everything renders in the proper order). 
-				tween._pauseTime = tween._startTime + ((rawTime() - tween._startTime) / tween._timeScale);
+			return add(tween, time || 0);
+		}
+		
+		public function add(child, position, align:String, stagger:Number) {
+			child._startTime = Number(position || 0) + child._delay;
+			if (child._paused) if (this != child._timeline) { //we only adjust the _pauseTime if it wasn't in this timeline already. Remember, sometimes a tween will be inserted again into the same timeline when its startTime is changed so that the tweens in the TimelineLite/Max are re-ordered properly in the linked list (so everything renders in the proper order). 
+				child._pauseTime = child._startTime + ((rawTime() - child._startTime) / child._timeScale);
 			}
-			if (tween.timeline) {
-				tween.timeline._remove(tween, true); //removes from existing timeline so that it can be properly added to this one.
+			if (child.timeline) {
+				child.timeline._remove(child, true); //removes from existing timeline so that it can be properly added to this one.
 			}
-			tween.timeline = tween._timeline = this;
-			if (tween._gc) {
-				tween._enabled(true, true);
+			child.timeline = child._timeline = this;
+			if (child._gc) {
+				child._enabled(true, true);
 			}
 			
 			var prevTween:Animation = _last;
 			if (_sortChildren) {
-				var st:Number = tween._startTime;
+				var st:Number = child._startTime;
 				while (prevTween && prevTween._startTime > st) {
 					prevTween = prevTween._prev;
 				}
 			}
 			if (prevTween) {
-				tween._next = prevTween._next;
-				prevTween._next = Animation(tween);
+				child._next = prevTween._next;
+				prevTween._next = Animation(child);
 			} else {
-				tween._next = _first;
-				_first = Animation(tween);
+				child._next = _first;
+				_first = Animation(child);
 			}
-			if (tween._next) {
-				tween._next._prev = tween;
+			if (child._next) {
+				child._next._prev = child;
 			} else {
-				_last = Animation(tween);
+				_last = Animation(child);
 			}
-			tween._prev = prevTween;
+			child._prev = prevTween;
 			
 			if (_timeline) {
 				_uncache(true);

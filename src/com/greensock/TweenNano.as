@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12 beta 1
- * DATE: 2012-04-02
+ * VERSION: 12.0.0
+ * DATE: 2013-01-21
  * AS2 (AS3 is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -19,7 +19,7 @@
  * @author Jack Doyle, jack@greensock.com
  */	 
 class com.greensock.TweenNano {
-		public static var version:Number = 12.0;
+		public static var version:String = "12.0.0";
 		private static var _time:Number;
 		private static var _frame:Number;
 		private static var _reservedProps:Object;

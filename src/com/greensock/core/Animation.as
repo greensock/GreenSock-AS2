@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0 beta 4.1
- * DATE: 2012-02-29
+ * VERSION: 12.0.0
+ * DATE: 2013-01-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -16,7 +16,7 @@ import com.greensock.core.SimpleTimeline;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.core.Animation {
-		public static var version:Number = 12.0;
+		public static var version:String = "12.0.0";
 		public static var ticker:MovieClip = _jumpStart(_root);
 		private static var _rootFrame:Number = -1;
 		public static var _rootTimeline:SimpleTimeline;
@@ -73,7 +73,7 @@ class com.greensock.core.Animation {
 			}
 			
 			var tl:SimpleTimeline = (this.vars.useFrames) ? _rootFramesTimeline : _rootTimeline;
-			tl.insert(this, tl._time);
+			tl.add(this, tl._time);
 			
 			_reversed = (this.vars.reversed == true);
 			if (this.vars.paused) {
@@ -134,7 +134,7 @@ class com.greensock.core.Animation {
 			_active = (enabled && !_paused && _totalTime > 0 && _totalTime < _totalDuration);
 			if (ignoreTimeline != true) {
 				if (enabled && timeline == null) {
-					_timeline.insert(this, _startTime - _delay);
+					_timeline.add(this, _startTime - _delay);
 				} else if (!enabled && timeline != null) {
 					_timeline._remove(this, true);
 				}
@@ -354,7 +354,7 @@ class com.greensock.core.Animation {
 			if (value != _startTime) {
 				_startTime = value;
 				if (timeline) if (timeline._sortChildren) {
-					timeline.insert(this, value - _delay); //ensures that any necessary re-sequencing of Animations in the timeline occurs to make sure the rendering order is correct.
+					timeline.add(this, value - _delay); //ensures that any necessary re-sequencing of Animations in the timeline occurs to make sure the rendering order is correct.
 				}
 			}
 			return this;
