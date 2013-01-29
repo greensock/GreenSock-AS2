@@ -584,7 +584,4 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			return (_paused || (_totalTime !== 0 && _totalTime !== _totalDuration)) ? _totalTime : (_timeline.rawTime() - _startTime) * _timeScale;
 		}
 	
-}artTime) * _timeScale;
-		}
-	
 }

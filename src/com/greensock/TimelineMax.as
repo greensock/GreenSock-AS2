@@ -432,8 +432,4 @@ class com.greensock.TimelineMax extends TimelineLite {
 			return seek(value, true);
 		}
 	
-}		}
-			return seek(value, true);
-		}
-	
 }

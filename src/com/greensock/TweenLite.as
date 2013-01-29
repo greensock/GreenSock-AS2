@@ -588,5 +588,3 @@ class com.greensock.TweenLite extends Animation {
 		
 	
 }
-	
-}

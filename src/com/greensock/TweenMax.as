@@ -537,12 +537,4 @@ class com.greensock.TweenMax extends TweenLite {
 			return value;
 		}
 	
-} tl._timeScale / value);
-			tl = _rootFramesTimeline;
-			t = _rootFrame;
-			tl._startTime = t - ((t - tl._startTime) * tl._timeScale / value);
-			_rootFramesTimeline._timeScale = _rootTimeline._timeScale = value;
-			return value;
-		}
-	
 }
