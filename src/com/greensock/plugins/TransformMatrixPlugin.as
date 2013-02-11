@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0
- * DATE: 2012-02-14
+ * VERSION: 12.0.1
+ * DATE: 2013-02-09
  * AS2
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -74,11 +74,15 @@ class com.greensock.plugins.TransformMatrixPlugin extends TweenPlugin {
 			if ((value._rotation != null) || (value.shortRotation != null) || (value.scale != null && !(value instanceof Matrix)) || (value._xscale != null) || (value._yscale != null) || (value.skewX != null) || (value.skewY != null) || (value.skewX2 != null) || (value.skewY2 != null)) {
 				var ratioX:Number, ratioY:Number;
 				var scaleX:Number = Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b); //Bugs in the Flex framework prevent DisplayObject.scaleX from working consistently, so we must determine it using the matrix.
-				if (matrix.a < 0 && matrix.d > 0) {
+				if (scaleX == 0) {
+					matrix.a = scaleX = 0.0001
+				} else if (matrix.a < 0 && matrix.d > 0) {
 					scaleX = -scaleX;
 				}
 				var scaleY:Number = Math.sqrt(matrix.c * matrix.c + matrix.d * matrix.d); //Bugs in the Flex framework prevent DisplayObject.scaleY from working consistently, so we must determine it using the matrix.
-				if (matrix.d < 0 && matrix.a > 0) {
+				if (scaleY == 0) {
+					matrix.d = scaleY = 0.0001;
+				} else if (matrix.d < 0 && matrix.a > 0) {
 					scaleY = -scaleY;
 				}
 				var angle:Number = Math.atan2(matrix.b, matrix.a); //Bugs in the Flex framework prevent DisplayObject.rotation from working consistently, so we must determine it using the matrix

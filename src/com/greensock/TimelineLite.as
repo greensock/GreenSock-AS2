@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.0
- * DATE: 2013-01-21
+ * VERSION: 12.0.1
+ * DATE: 2013-02-09
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.0";
+		public static var version:String = "12.0.1";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -539,27 +539,32 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			if (!arguments.length) {
 				if (_dirty) {
 					var max:Number = 0, 
-						tween:Animation = _first, 
+						tween:Animation = _last, 
 						prevStart:Number = -999999999999, 
-						next:Animation, end:Number;
+						prev:Animation, end:Number;
 					while (tween) {
-						next = tween._next; //record it here in case the tween changes position in the sequence...
-						
-						if (tween._startTime < prevStart && _sortChildren) { //in case one of the tweens shifted out of order, it needs to be re-inserted into the correct position in the sequence
+						prev = tween._prev; //record it here in case the tween changes position in the sequence...
+						if (tween._dirty) {
+							tween.totalDuration(); //could change the tween._startTime, so make sure the tween's cache is clean before analyzing it.
+						}
+						if (tween._startTime > prevStart && _sortChildren && !tween._paused) { //in case one of the tweens shifted out of order, it needs to be re-inserted into the correct position in the sequence
 							add(tween, tween._startTime - tween._delay);
 						} else {
 							prevStart = tween._startTime;
 						}
-						if (tween._startTime < 0) {//children aren't allowed to have negative startTimes, so adjust here if one is found.
+						if (tween._startTime < 0 && !tween._paused) { //children aren't allowed to have negative startTimes unless smoothChildTiming is true, so adjust here if one is found.
 							max -= tween._startTime;
+							if (_timeline.smoothChildTiming) {
+								_startTime += tween._startTime / _timeScale;
+							}
 							shiftChildren(-tween._startTime, false, -9999999999);
+							prevStart = 0;
 						}
-						end = tween._startTime + ((!tween._dirty ? tween._totalDuration : tween.totalDuration()) / tween._timeScale);
+						end = tween._startTime + (tween._totalDuration / tween._timeScale);
 						if (end > max) {
 							max = end;
 						}
-						
-						tween = next;
+						tween = prev;
 					}
 					_duration = _totalDuration = max;
 					_dirty = false;
