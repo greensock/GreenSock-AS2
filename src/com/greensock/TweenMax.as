@@ -483,6 +483,13 @@ class com.greensock.TweenMax extends TweenLite {
 			return totalTime(value, suppressEvents);
 		}
 		
+		public function duration(value:Number) {
+			if (!arguments.length) {
+				return this._duration; //don't set _dirty = false because there could be repeats that haven't been factored into the _totalDuration yet. Otherwise, if you create a repeated TweenMax and then immediately check its duration(), it would cache the value and the totalDuration would not be correct, thus repeats wouldn't take effect.
+			}
+			return super.duration(value);
+		}
+		
 		public function totalDuration(value:Number) {
 			if (!arguments.length) {
 				if (_dirty) {
