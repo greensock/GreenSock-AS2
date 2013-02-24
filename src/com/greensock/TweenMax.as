@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.1
- * DATE: 2013-02-13
+ * VERSION: 12.0.2
+ * DATE: 2013-02-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.0.1";
+		public static var version:String = "12.0.2";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero
@@ -229,8 +229,13 @@ class com.greensock.TweenMax extends TweenLite {
 			if (!_active) if (!_paused) {
 				_active = true; //so that if the user renders a tween (as opposed to the timeline rendering it), the timeline is forced to re-render and align it with the proper time/frame on the next rendering cycle. Maybe the tween already finished but the user manually re-renders it as halfway done.
 			}
-			if (prevTotalTime == 0) if (vars.onStart) if (_totalTime !== 0 || _duration === 0) if (!suppressEvents) {
-				vars.onStart.apply(vars.onStartScope || this, vars.onStartParams);
+			if (prevTotalTime == 0) {
+				if (_startAt != null) {
+					_startAt.render(time, suppressEvents, force);
+				}
+				if (vars.onStart) if (_totalTime !== 0 || _duration === 0) if (!suppressEvents) {
+					vars.onStart.apply(vars.onStartScope || this, vars.onStartParams);
+				}
 			}
 			
 			pt = _firstPT;
@@ -243,13 +248,21 @@ class com.greensock.TweenMax extends TweenLite {
 				pt = pt._next;
 			}
 			
-			if (_onUpdate != null) if (!suppressEvents) {
-				_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
+			if (_onUpdate != null) {
+				if (time < 0 && _startAt != null) {
+					_startAt.render(time, suppressEvents, force); //note: for performance reasons, we tuck this conditional logic inside less traveled areas (most tweens don't have an onUpdate). We'd just have it at the end before the onComplete, but the values should be updated before any onUpdate is called, so we ALSO put it here and then if it's not called, we do so later near the onComplete.
+				}
+				if (!suppressEvents) {
+					_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
+				}
 			}
 			if (_cycle != prevCycle) if (!suppressEvents) if (!_gc) if (vars.onRepeat) {
 				vars.onRepeat.apply(vars.onRepeatScope || this, vars.onRepeatParams);
 			}
 			if (callback) if (!_gc) { //check gc because there's a chance that kill() could be called in an onUpdate
+				if (time < 0 && _startAt != null && _onUpdate == null) {
+					_startAt.render(time, suppressEvents, true);
+				}
 				if (isComplete) {
 					if (_timeline.autoRemoveChildren) {
 						_enabled(false, false);

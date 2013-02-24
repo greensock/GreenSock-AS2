@@ -1,12 +1,15 @@
 ﻿/**
- * VERSION: 12.0.1
- * DATE: 2013-02-13
+ * VERSION: 12.0.2
+ * DATE: 2013-02-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
 import com.greensock.core.Animation;
 import com.greensock.core.SimpleTimeline;
 import com.greensock.easing.Ease;
+
+import fl.transitions.Tween;
+
 /**
  * 	TweenLite is an extremely fast, lightweight, and flexible tweening engine that serves as the foundation of 
  * 	the GreenSock Tweening Platform. A TweenLite instance handles tweening one or more numeric properties of any
@@ -20,7 +23,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.1";
+		public static var version:String = "12.0.2";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -42,6 +45,7 @@ class com.greensock.TweenLite extends Animation {
 		private var _overwrite:Number;
 		private var _overwrittenProps:Object; 
 		private var _notifyPluginsOfEnabled:Boolean;
+		private var _startAt:TweenLite;
 		
 		public function TweenLite(target:Object, duration:Number, vars:Object) {
 			super(duration, vars);
@@ -94,7 +98,7 @@ class com.greensock.TweenLite extends Animation {
 			if (vars.startAt) {
 				vars.startAt.overwrite = 0;
 				vars.startAt.immediateRender = true;
-				TweenLite.to(target, 0, vars.startAt);
+				_startAt = new TweenLite(target, 0, vars.startAt);
 			}
 			var i:Number, initPlugins:Boolean, pt:Object;
 			if (vars.ease instanceof Ease) {
@@ -280,8 +284,13 @@ class com.greensock.TweenLite extends Animation {
 			if (!_active) if (!_paused) {
 				_active = true;  //so that if the user renders a tween (as opposed to the timeline rendering it), the timeline is forced to re-render and align it with the proper time/frame on the next rendering cycle. Maybe the tween already finished but the user manually re-renders it as halfway done.
 			}
-			if (prevTime === 0) if (vars.onStart) if (_time !== 0 || _duration === 0) if (!suppressEvents) {
-				vars.onStart.apply(vars.onStartScope || this, vars.onStartParams);
+			if (prevTime === 0) {
+				if (_startAt != null) {
+					_startAt.render(time, suppressEvents, force);
+				}
+				if (vars.onStart) if (_time !== 0 || _duration === 0) if (!suppressEvents) {
+					vars.onStart.apply(vars.onStartScope || this, vars.onStartParams);
+				}
 			}
 			
 			pt = _firstPT;
@@ -294,11 +303,19 @@ class com.greensock.TweenLite extends Animation {
 				pt = pt._next;
 			}
 			
-			if (_onUpdate != null) if (!suppressEvents) {
-				_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
+			if (_onUpdate != null) {
+				if (time < 0 && _startAt != null) {
+					_startAt.render(time, suppressEvents, force); //note: for performance reasons, we tuck this conditional logic inside less traveled areas (most tweens don't have an onUpdate). We'd just have it at the end before the onComplete, but the values should be updated before any onUpdate is called, so we ALSO put it here and then if it's not called, we do so later near the onComplete.
+				}
+				if (!suppressEvents) {
+					_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
+				}
 			}
 			
 			if (callback) if (!_gc) { //check _gc because there's a chance that kill() could be called in an onUpdate
+				if (time < 0 && _startAt != null && _onUpdate == null) {
+					_startAt.render(time, suppressEvents, force);
+				}
 				if (isComplete) {
 					if (_timeline.autoRemoveChildren) {
 						_enabled(false, false);
