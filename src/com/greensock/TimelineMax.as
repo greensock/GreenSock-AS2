@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.2
- * DATE: 2013-02-21
+ * VERSION: 12.0.3
+ * DATE: 2013-02-28
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.0.2";
+		public static var version:String = "12.0.3";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -242,9 +242,9 @@ class com.greensock.TimelineMax extends TimelineLite {
 					} else if (tween._active || (tween._startTime <= _time && !tween._paused && !tween._gc)) {
 						
 						if (!tween._reversed) {
-							tween.render((time - tween._startTime) * tween._timeScale, suppressEvents, false);
+							tween.render((time - tween._startTime) * tween._timeScale, suppressEvents, force);
 						} else {
-							tween.render(((!tween._dirty) ? tween._totalDuration : tween.totalDuration()) - ((time - tween._startTime) * tween._timeScale), suppressEvents, false);
+							tween.render(((!tween._dirty) ? tween._totalDuration : tween.totalDuration()) - ((time - tween._startTime) * tween._timeScale), suppressEvents, force);
 						}
 						
 					}
@@ -259,9 +259,9 @@ class com.greensock.TimelineMax extends TimelineLite {
 					} else if (tween._active || (tween._startTime <= prevTime && !tween._paused && !tween._gc)) {
 						
 						if (!tween._reversed) {
-							tween.render((time - tween._startTime) * tween._timeScale, suppressEvents, false);
+							tween.render((time - tween._startTime) * tween._timeScale, suppressEvents, force);
 						} else {
-							tween.render(((!tween._dirty) ? tween._totalDuration : tween.totalDuration()) - ((time - tween._startTime) * tween._timeScale), suppressEvents, false);
+							tween.render(((!tween._dirty) ? tween._totalDuration : tween.totalDuration()) - ((time - tween._startTime) * tween._timeScale), suppressEvents, force);
 						}
 						
 					}

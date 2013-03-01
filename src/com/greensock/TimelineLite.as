@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.2
- * DATE: 2013-02-21
+ * VERSION: 12.0.3
+ * DATE: 2013-02-28
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.2";
+		public static var version:String = "12.0.3";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -84,9 +84,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		
 		public function staggerFromTo(targets:Array, duration:Number, fromVars:Object, toVars:Object, stagger:Number, position, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
 			toVars.startAt = fromVars;
-			if (fromVars.immediateRender) {
-				toVars.immediateRender = true;
-			}
+			toVars.immediateRender = (toVars.immediateRender != false && fromVars.immediateRender != false);
 			return staggerTo(targets, duration, toVars, stagger, position, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
 		}
 		
@@ -95,7 +93,10 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		}
 		
 		public function set(target:Object, vars:Object, position) {
-			vars.immediateRender = false;
+			position = _parseTimeOrLabel(position, 0, true);
+			if (vars.immediateRender == null) {
+				vars.immediateRender = (position === _time && !_paused);
+			}
 			return add( new TweenLite(target, 0, vars), position);
 		}
 		
@@ -138,37 +139,37 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			if (typeof(position) !== "number") {
 				position = _parseTimeOrLabel(position, 0, true, value);
 			}
-			if (value instanceof Animation) {
-				//continue...
-			} else if (value instanceof Array) {
-				align = align || "normal";
-				stagger = stagger || 0;
-				var i:Number, 
-				curTime:Number = Number(position), 
-					l:Number = value.length, 
-					child;
-				for (i = 0; i < l; i++) {
-					if ((child = value[i]) instanceof Array) {
-						child = new TimelineLite({tweens:child});
+			if (!(value instanceof Animation)) {
+				if (value instanceof Array) {
+					align = align || "normal";
+					stagger = stagger || 0;
+					var i:Number, 
+						curTime:Number = Number(position), 
+						l:Number = value.length, 
+						child;
+					for (i = 0; i < l; i++) {
+						if ((child = value[i]) instanceof Array) {
+							child = new TimelineLite({tweens:child});
+						}
+						add(child, curTime);
+						if (typeof(child) === "string" || typeof(child) === "function") {
+							//do nothing
+						} else if (align === "sequence") {
+							curTime = child._startTime + (child.totalDuration() / child._timeScale);
+						} else if (align === "start") {
+							child._startTime -= child.delay();
+						}
+						curTime += stagger;
 					}
-					add(child, curTime);
-					if (typeof(child) === "string" || typeof(child) === "function") {
-						//do nothing
-					} else if (align === "sequence") {
-						curTime = child._startTime + (child.totalDuration() / child._timeScale);
-					} else if (align === "start") {
-						child._startTime -= child.delay();
-					}
-					curTime += stagger;
+					return _uncache(true);
+				} else if (typeof(value) === "string") {
+					return addLabel(String(value), position);
+				} else if (typeof(value) === "function") {
+					value = TweenLite.delayedCall(0, value);
+				} else {
+					trace("Cannot add " + value + " into the TimelineLite/Max: it is neither a tween, timeline, function, nor a String.");
+					return this;
 				}
-				return _uncache(true);
-			} else if (typeof(value) === "string") {
-				return addLabel(String(value), position);
-			} else if (typeof(value) === "function") {
-				value = TweenLite.delayedCall(0, value);
-			} else {
-				trace("Cannot add " + value + " into the TimelineLite/Max: it is neither a tween, timeline, function, nor a String.");
-				return this;
 			}
 			
 			super.add(value, position);
@@ -186,6 +187,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 					tl = tl._timeline;
 				}
 			}
+
 			return this;
 		}
 		
@@ -341,9 +343,9 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 					} else if (tween._active || (tween._startTime <= _time && !tween._paused && !tween._gc)) {
 						
 						if (!tween._reversed) {
-							tween.render((time - tween._startTime) * tween._timeScale, suppressEvents, false);
+							tween.render((time - tween._startTime) * tween._timeScale, suppressEvents, force);
 						} else {
-							tween.render(((!tween._dirty) ? tween._totalDuration : tween.totalDuration()) - ((time - tween._startTime) * tween._timeScale), suppressEvents, false);
+							tween.render(((!tween._dirty) ? tween._totalDuration : tween.totalDuration()) - ((time - tween._startTime) * tween._timeScale), suppressEvents, force);
 						}
 						
 					}
@@ -358,9 +360,9 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 					} else if (tween._active || (tween._startTime <= prevTime && !tween._paused && !tween._gc)) {
 						
 						if (!tween._reversed) {
-							tween.render((time - tween._startTime) * tween._timeScale, suppressEvents, false);
+							tween.render((time - tween._startTime) * tween._timeScale, suppressEvents, force);
 						} else {
-							tween.render(((!tween._dirty) ? tween._totalDuration : tween.totalDuration()) - ((time - tween._startTime) * tween._timeScale), suppressEvents, false);
+							tween.render(((!tween._dirty) ? tween._totalDuration : tween.totalDuration()) - ((time - tween._startTime) * tween._timeScale), suppressEvents, force);
 						}
 						
 					}
@@ -540,7 +542,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				if (_dirty) {
 					var max:Number = 0, 
 						tween:Animation = _last, 
-						prevStart:Number = -999999999999, 
+						prevStart:Number = 999999999999, 
 						prev:Animation, end:Number;
 					while (tween) {
 						prev = tween._prev; //record it here in case the tween changes position in the sequence...

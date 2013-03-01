@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.2
- * DATE: 2013-02-21
+ * VERSION: 12.0.3
+ * DATE: 2013-02-28
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -23,7 +23,7 @@ import fl.transitions.Tween;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.2";
+		public static var version:String = "12.0.3";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -99,6 +99,9 @@ class com.greensock.TweenLite extends Animation {
 				vars.startAt.overwrite = 0;
 				vars.startAt.immediateRender = true;
 				_startAt = new TweenLite(target, 0, vars.startAt);
+				if (vars.immediateRender) { //tweens that render immediately (like most from() tweens) shouldn't revert when their parent timeline's playhead goes backward past the startTime because the initial render could have happened anytime and it shouldn't be directly correlated to this tween's startTime. Imagine setting up a complex animation where the beginning states of various objects are rendered immediately but the tween doesn't happen for quite some time - if we revert to the starting values as soon as the playhead goes backward past the tween's startTime, it will throw things off visually. Reversion should only happen in TimelineLite/Max instances where immediateRender was false (which is the default in the convenience methods like from()).
+					_startAt = null;
+				}
 			}
 			var i:Number, initPlugins:Boolean, pt:Object;
 			if (vars.ease instanceof Ease) {
@@ -400,6 +403,7 @@ class com.greensock.TweenLite extends Animation {
 			_firstPT = null;
 			_overwrittenProps = null;
 			_onUpdate = null;
+			_startAt = null;
 			_initted = _active = _notifyPluginsOfEnabled = false;
 			_propLookup = (_targets) ? {} : [];
 			return this;
@@ -440,9 +444,7 @@ class com.greensock.TweenLite extends Animation {
 		
 		public static function fromTo(target:Object, duration:Number, fromVars:Object, toVars:Object):TweenLite {
 			toVars.startAt = fromVars;
-			if (fromVars.immediateRender) {
-				toVars.immediateRender = true;
-			}
+			toVars.immediateRender = (toVars.immediateRender != false && fromVars.immediateRender != false);
 			return new TweenLite(target, duration, toVars);
 		}
 		
