@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.3
- * DATE: 2013-02-28
+ * VERSION: 12.0.4
+ * DATE: 2013-03-17
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.0.3";
+		public static var version:String = "12.0.4";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -107,7 +107,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 				prevRawPrevTime:Number = _rawPrevTime,
 				prevPaused:Boolean = _paused, 
 				prevCycle:Number = _cycle, 
-				tween:Animation, isComplete:Boolean, next:Animation, dur:Number, callback:String;
+				tween:Animation, isComplete:Boolean, next:Animation, dur:Number, callback:String, internalForce:Boolean;
 			if (time >= totalDur) {
 				if (!_locked) {
 					_totalTime = totalDur;
@@ -117,7 +117,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 					isComplete = true;
 					callback = "onComplete";
 					if (_duration === 0) if (time === 0 || _rawPrevTime < 0) if (_rawPrevTime !== time) { //In order to accommodate zero-duration timelines, we must discern the momentum/direction of time in order to render values properly when the "playhead" goes past 0 in the forward direction or lands directly on it, and also when it moves past it in the backward direction (from a postitive time to a negative time).
-						force = true;
+						internalForce = true;
 					}
 				}
 				_rawPrevTime = time;
@@ -141,10 +141,10 @@ class com.greensock.TimelineMax extends TimelineLite {
 				if (time < 0) {
 					_active = false;
 					if (_duration == 0) if (_rawPrevTime >= 0) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
-						force = true;
+						internalForce = true;
 					}
 				} else if (!_initted) {
-					force = true;
+					internalForce = true;
 				}
 				_rawPrevTime = time;
 				time = (_duration == 0) ? 0 : -0.000001; //to avoid occasional floating point rounding errors in Flash - sometimes child tweens/timelines were not being rendered at the very beginning (their progress might be 0.000000000001 instead of 0 because when Flash performed _time - tween._startTime, floating point errors would return a value that was SLIGHTLY off)
@@ -220,7 +220,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 				_locked = false;
 			}
 
-			if (_time === prevTime && !force) {
+			if (_time === prevTime && !force && !internalForce) {
 				if (prevTotalTime !== _totalTime) if (_onUpdate != null) if (!suppressEvents) { //so that onUpdate fires even during the repeatDelay - as long as the totalTime changed, we should trigger onUpdate.
 					_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
 				}

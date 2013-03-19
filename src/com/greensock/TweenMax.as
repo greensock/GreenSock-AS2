@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.3
- * DATE: 2013-02-28
+ * VERSION: 12.0.4
+ * DATE: 2013-03-17
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.0.3";
+		public static var version:String = "12.0.4";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero
@@ -222,6 +222,9 @@ class com.greensock.TweenMax extends TweenLite {
 				return;
 			} else if (!_initted) {
 				_init();
+				if (!_initted) { //immediateRender tweens typically won't initialize until the playhead advances (_time is greater than 0) in order to ensure that overwriting occurs properly.
+					return;
+				}
 				if (!isComplete && _time) { //_ease is initially set to defaultEase, so now that init() has run, _ease is set properly and we need to recalculate the ratio. Overall this is faster than using conditional logic earlier in the method to avoid having to set ratio twice because we only init() once but renderTime() gets called VERY frequently.
 					ratio = _ease.getRatio(_time / _duration);
 				}

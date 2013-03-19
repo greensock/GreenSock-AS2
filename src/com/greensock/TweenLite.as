@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.3
- * DATE: 2013-03-01
+ * VERSION: 12.0.4
+ * DATE: 2013-03-17
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -23,7 +23,7 @@ import fl.transitions.Tween;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.3";
+		public static var version:String = "12.0.4";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -95,15 +95,33 @@ class com.greensock.TweenLite extends Animation {
 		*/
 		
 		private function _init():Void {
+			var i:Number, initPlugins:Boolean, pt:Object;
 			if (vars.startAt) {
 				vars.startAt.overwrite = 0;
 				vars.startAt.immediateRender = true;
 				_startAt = new TweenLite(target, 0, vars.startAt);
-				if (vars.immediateRender) { //tweens that render immediately (like most from() tweens) shouldn't revert when their parent timeline's playhead goes backward past the startTime because the initial render could have happened anytime and it shouldn't be directly correlated to this tween's startTime. Imagine setting up a complex animation where the beginning states of various objects are rendered immediately but the tween doesn't happen for quite some time - if we revert to the starting values as soon as the playhead goes backward past the tween's startTime, it will throw things off visually. Reversion should only happen in TimelineLite/Max instances where immediateRender was false (which is the default in the convenience methods like from()).
+				if (vars.immediateRender) {
+					_startAt = null; //tweens that render immediately (like most from() and fromTo() tweens) shouldn't revert when their parent timeline's playhead goes backward past the startTime because the initial render could have happened anytime and it shouldn't be directly correlated to this tween's startTime. Imagine setting up a complex animation where the beginning states of various objects are rendered immediately but the tween doesn't happen for quite some time - if we revert to the starting values as soon as the playhead goes backward past the tween's startTime, it will throw things off visually. Reversion should only happen in TimelineLite/Max instances where immediateRender was false (which is the default in the convenience methods like from()).
+					if (_time === 0 && _duration !== 0) {
+						return; //we skip initialization here so that overwriting doesn't occur until the tween actually begins. Otherwise, if you create several immediateRender:true tweens of the same target/properties to drop into a TimelineLite or TimelineMax, the last one created would overwrite the first ones because they didn't get placed into the timeline yet before the first render occurs and kicks in overwriting.
+					}
+				}
+			} else if (vars.runBackwards && vars.immediateRender && _duration !== 0) {
+				//from() tweens must be handled uniquely: their beginning values must be rendered but we don't want overwriting to occur yet (when time is still 0). Wait until the tween actually begins before doing all the routines like overwriting. At that time, we should render at the END of the tween to ensure that things initialize correctly (remember, from() tweens go backwards)
+				if (_time === 0) {
+					vars.overwrite = vars.delay = 0;
+					vars.runBackwards = false;
+					_startAt = new TweenLite(target, 0, vars);
+					vars.overwrite = _overwrite;
+					vars.runBackwards = true;
+					vars.delay = _delay;
+					return;
+				} else if (_startAt != null) {
+					_startAt.render(-1, true);
 					_startAt = null;
 				}
 			}
-			var i:Number, initPlugins:Boolean, pt:Object;
+			
 			if (vars.ease instanceof Ease) {
 				_ease = (vars.easeParams instanceof Array) ? vars.ease.config.apply(vars.ease, vars.easeParams) : vars.ease;
 			} else if (typeof(vars.ease) === "function") {
@@ -279,6 +297,9 @@ class com.greensock.TweenLite extends Animation {
 				return;
 			} else if (!_initted) {
 				_init();
+				if (!_initted) { //immediateRender tweens typically won't initialize until the playhead advances (_time is greater than 0) in order to ensure that overwriting occurs properly.
+					return;
+				}
 				if (!isComplete && _time) { //_ease is initially set to defaultEase, so now that init() has run, _ease is set properly and we need to recalculate the ratio. Overall this is faster than using conditional logic earlier in the method to avoid having to set ratio twice because we only init() once but renderTime() gets called VERY frequently.
 					ratio = _ease.getRatio(_time / _duration);
 				}

@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.3
- * DATE: 2013-02-28
+ * VERSION: 12.0.4
+ * DATE: 2013-03-17
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.3";
+		public static var version:String = "12.0.4";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -291,14 +291,14 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				prevStart:Number = _startTime, 
 				prevTimeScale:Number = _timeScale, 
 				prevPaused:Boolean = _paused,
-				tween:Animation, isComplete:Boolean, next:Animation, callback:String;
+				tween:Animation, isComplete:Boolean, next:Animation, callback:String, internalForce:Boolean;
 			if (time >= totalDur) {
 				_totalTime = _time = totalDur;
 				if (!_reversed) if (!_hasPausedChild()) {
 					isComplete = true;
 					callback = "onComplete";
 					if (_duration === 0) if (time === 0 || _rawPrevTime < 0) if (_rawPrevTime !== time) { //In order to accommodate zero-duration timelines, we must discern the momentum/direction of time in order to render values properly when the "playhead" goes past 0 in the forward direction or lands directly on it, and also when it moves past it in the backward direction (from a postitive time to a negative time).
-						force = true;
+						internalForce = true;
 					}
 				}
 				_rawPrevTime = time;
@@ -313,10 +313,10 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				if (time < 0) {
 					_active = false;
 					if (_duration == 0) if (_rawPrevTime >= 0) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
-						force = true;
+						internalForce = true;
 					}
 				} else if (!_initted) {
-					force = true;
+					internalForce = true;
 				}
 				_rawPrevTime = time;
 				time = -0.000001; //to avoid occassional floating point rounding errors in Flash - sometimes child tweens/timelines were not being rendered at the very beginning (their progress might be 0.000000000001 instead of 0 because when Flash performed _time - tween._startTime, floating point errors would return a value that was SLIGHTLY off)
@@ -325,7 +325,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				_totalTime = _time = _rawPrevTime = time;
 			}
 			
-			if (_time === prevTime && !force) {
+			if (_time === prevTime && !force && !internalForce) {
 				return;
 			} else if (!_initted) {
 				_initted = true;
