@@ -1,6 +1,6 @@
 ﻿/**
  * VERSION: 12.0.4
- * DATE: 2013-03-17
+ * DATE: 2013-03-19
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -300,8 +300,11 @@ class com.greensock.TweenLite extends Animation {
 				if (!_initted) { //immediateRender tweens typically won't initialize until the playhead advances (_time is greater than 0) in order to ensure that overwriting occurs properly.
 					return;
 				}
-				if (!isComplete && _time) { //_ease is initially set to defaultEase, so now that init() has run, _ease is set properly and we need to recalculate the ratio. Overall this is faster than using conditional logic earlier in the method to avoid having to set ratio twice because we only init() once but renderTime() gets called VERY frequently.
+				//_ease is initially set to defaultEase, so now that init() has run, _ease is set properly and we need to recalculate the ratio. Overall this is faster than using conditional logic earlier in the method to avoid having to set ratio twice because we only init() once but renderTime() gets called VERY frequently.
+				if (_time && !isComplete) {
 					ratio = _ease.getRatio(_time / _duration);
+				} else if (isComplete && _ease._calcEnd) {
+					ratio = _ease.getRatio((_time === 0) ? 0 : 1);
 				}
 			}
 			
