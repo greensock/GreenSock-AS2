@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.4
- * DATE: 2013-03-19
+ * VERSION: 12.0.5
+ * DATE: 2013-03-25
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.0.4";
+		public static var version:String = "12.0.5";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero
@@ -143,7 +143,7 @@ class com.greensock.TweenMax extends TweenLite {
 					_rawPrevTime = time;
 				}
 				
-			} else if (time <= 0) {
+			} else if (time < 0.0000001) { //to work around occasional floating point math artifacts, round super small values to 0. 
 				_totalTime = _time = _cycle = 0;
 				ratio = _ease._calcEnd ? _ease.getRatio(0) : 0;
 				if (prevTotalTime != 0 || (_duration == 0 && _rawPrevTime > 0)) {
@@ -237,7 +237,11 @@ class com.greensock.TweenMax extends TweenLite {
 			}
 			if (prevTotalTime == 0) {
 				if (_startAt != null) {
-					_startAt.render(time, suppressEvents, force);
+					if (time >= 0) {
+						_startAt.render(time, suppressEvents, force);
+					} else if (!callback) {
+						callback = "_dummyGS"; //if no callback is defined, use a dummy value just so that the condition at the end evaluates as true because _startAt should render AFTER the normal render loop when the time is negative. We could handle this in a more intuitive way, of course, but the render loop is the MOST important thing to optimize, so this technique allows us to avoid adding extra conditional logic in a high-frequency area.
+					}
 				}
 				if (vars.onStart) if (_totalTime !== 0 || _duration === 0) if (!suppressEvents) {
 					vars.onStart.apply(vars.onStartScope || this, vars.onStartParams);

@@ -1,6 +1,6 @@
 /**
  * VERSION: 12.0
- * DATE: 2012-01-12
+ * DATE: 2013-03-25
  * AS2
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -22,7 +22,7 @@ class com.greensock.plugins.DropShadowFilterPlugin extends FilterPlugin {
 			super("dropShadowFilter");
 		}
 		
-		public function onInitTween(target:Object, value:Object, tween:TweenLite):Boolean {
+		public function _onInitTween(target:Object, value:Object, tween:TweenLite):Boolean {
 			return _initFilter(target, value, tween, DropShadowFilter, new DropShadowFilter(0, 45, 0x000000, 0, 0, 0, 1, value.quality || 2, value.inner, value.knockout, value.hideObject), _propNames);
 		}
 	

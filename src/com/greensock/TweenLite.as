@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.4
- * DATE: 2013-03-19
+ * VERSION: 12.0.5
+ * DATE: 2013-03-25
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -23,7 +23,7 @@ import fl.transitions.Tween;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.4";
+		public static var version:String = "12.0.5";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -108,7 +108,10 @@ class com.greensock.TweenLite extends Animation {
 				}
 			} else if (vars.runBackwards && vars.immediateRender && _duration !== 0) {
 				//from() tweens must be handled uniquely: their beginning values must be rendered but we don't want overwriting to occur yet (when time is still 0). Wait until the tween actually begins before doing all the routines like overwriting. At that time, we should render at the END of the tween to ensure that things initialize correctly (remember, from() tweens go backwards)
-				if (_time === 0) {
+				if (_startAt != null) {
+					_startAt.render(-1, true);
+					_startAt = null;
+				} else if (_time === 0) {
 					vars.overwrite = vars.delay = 0;
 					vars.runBackwards = false;
 					_startAt = new TweenLite(target, 0, vars);
@@ -116,9 +119,6 @@ class com.greensock.TweenLite extends Animation {
 					vars.runBackwards = true;
 					vars.delay = _delay;
 					return;
-				} else if (_startAt != null) {
-					_startAt.render(-1, true);
-					_startAt = null;
 				}
 			}
 			
@@ -237,7 +237,7 @@ class com.greensock.TweenLite extends Animation {
 					_rawPrevTime = time;
 				}
 				
-			} else if (time <= 0) {
+			} else if (time < 0.0000001) { //to work around occasional floating point math artifacts, round super small values to 0. 
 				_totalTime = _time = 0;
 				ratio = _ease._calcEnd ? _ease.getRatio(0) : 0;
 				if (prevTime !== 0 || (_duration === 0 && _rawPrevTime > 0)) {
@@ -313,7 +313,11 @@ class com.greensock.TweenLite extends Animation {
 			}
 			if (prevTime === 0) {
 				if (_startAt != null) {
-					_startAt.render(time, suppressEvents, force);
+					if (time >= 0) {
+						_startAt.render(time, suppressEvents, force);
+					} else if (!callback) {
+						callback = "_dummyGS"; //if no callback is defined, use a dummy value just so that the condition at the end evaluates as true because _startAt should render AFTER the normal render loop when the time is negative. We could handle this in a more intuitive way, of course, but the render loop is the MOST important thing to optimize, so this technique allows us to avoid adding extra conditional logic in a high-frequency area.
+					}
 				}
 				if (vars.onStart) if (_time !== 0 || _duration === 0) if (!suppressEvents) {
 					vars.onStart.apply(vars.onStartScope || this, vars.onStartParams);

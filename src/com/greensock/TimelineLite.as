@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.4
- * DATE: 2013-03-17
+ * VERSION: 12.0.5
+ * DATE: 2013-03-25
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.4";
+		public static var version:String = "12.0.5";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -302,9 +302,9 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 					}
 				}
 				_rawPrevTime = time;
-				time = totalDur + 0.000001; //to avoid occassional floating point rounding errors in Flash - sometimes child tweens/timelines were not being fully completed (their progress might be 0.999999999999998 instead of 1 because when Flash performed _time - tween._startTime, floating point errors would return a value that was SLIGHTLY off)
+				time = totalDur + 0.000001; //to avoid occasional floating point rounding errors in Flash - sometimes child tweens/timelines were not being fully completed (their progress might be 0.999999999999998 instead of 1 because when Flash performed _time - tween._startTime, floating point errors would return a value that was SLIGHTLY off)
 
-			} else if (time <= 0) {
+			} else if (time < 0.0000001) { //to work around occasional floating point math artifacts, round super small values to 0. 
 				_totalTime = _time = 0;
 				if (prevTime != 0 || (_duration == 0 && _rawPrevTime > 0)) {
 					callback = "onReverseComplete";
@@ -319,7 +319,6 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 					internalForce = true;
 				}
 				_rawPrevTime = time;
-				time = -0.000001; //to avoid occassional floating point rounding errors in Flash - sometimes child tweens/timelines were not being rendered at the very beginning (their progress might be 0.000000000001 instead of 0 because when Flash performed _time - tween._startTime, floating point errors would return a value that was SLIGHTLY off)
 				
 			} else {
 				_totalTime = _time = _rawPrevTime = time;
@@ -334,7 +333,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				vars.onStart.apply(vars.onStartScope || this, vars.onStartParams);
 			}
 			
-			if (_time > prevTime) {
+			if (_time >= prevTime) {
 				tween = _first;
 				while (tween) {
 					next = tween._next; //record it here because the value could change after rendering...
