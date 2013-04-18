@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.5
- * DATE: 2013-03-25
+ * VERSION: 12.0.7
+ * DATE: 2013-04-18
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.0.5";
+		public static var version:String = "12.0.7";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero

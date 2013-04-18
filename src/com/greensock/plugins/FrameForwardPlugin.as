@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.01
- * DATE: 2012-06-25
+ * VERSION: 12.0.2
+ * DATE: 2013-04-09
  * AS2
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -26,17 +26,14 @@ class com.greensock.plugins.FrameForwardPlugin extends TweenPlugin {
 		}
 		
 		public function _onInitTween(target:Object, value:Object, tween:TweenLite):Boolean {
-			if ((typeof(target) != "movieclip") || isNaN(value)) {
-				return false;
-			}
 			_target = MovieClip(target);
 			_start = _target._currentframe;
 			_max = _target._totalframes;
-			_change = (typeof(value) == "number") ? Number(value) - _start : Number(value);
+			_change = (typeof(value) === "number") ? Number(value) - _start : (typeof(value) === "string" && value.charAt(1) === "=") ? Number(value.charAt(0) + "1") * Number(value.substr(2)) : Number(value) || 0;
 			if (!_backward && _change < 0) {
-				_change += _max;
+				_change = ((_change + (_max * 99999)) % _max) + ((_change / _max) | 0) * _max;
 			} else if (_backward && _change > 0) {
-				_change -= _max;
+				_change = ((_change - (_max * 99999)) % _max) - ((_change / _max) | 0) * _max;
 			}
 			return true;
 		}
@@ -48,7 +45,7 @@ class com.greensock.plugins.FrameForwardPlugin extends TweenPlugin {
 			} else if (frame < 0) {
 				frame += _max;
 			}
-			frame = (frame + 0.5) >> 0;
+			frame = (frame + 0.5) | 0;
 			if (frame != _target._currentframe) {
 				_target.gotoAndStop( (frame + 0.5) >> 0 );
 			}

@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.6
- * DATE: 2013-04-01
+ * VERSION: 12.0.7
+ * DATE: 2013-04-18
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -16,7 +16,7 @@ import com.greensock.core.SimpleTimeline;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.core.Animation {
-		public static var version:String = "12.0.6";
+		public static var version:String = "12.0.7";
 		public static var ticker:MovieClip = _jumpStart(_root);
 		private static var _rootFrame:Number = -1;
 		public static var _rootTimeline:SimpleTimeline;
@@ -110,7 +110,7 @@ class com.greensock.core.Animation {
 		public function restart(includeDelay:Boolean, suppressEvents:Boolean) {
 			reversed(false);
 			paused(false);
-			return totalTime((includeDelay) ? -_delay : 0, (suppressEvents != false));
+			return totalTime((includeDelay) ? -_delay : 0, (suppressEvents != false), true);
 		}
 		
 		public function reverse(from, suppressEvents:Boolean) {
@@ -309,19 +309,19 @@ class com.greensock.core.Animation {
 			return totalTime(value, suppressEvents);
 		}
 		
-		public function totalTime(time:Number, suppressEvents:Boolean) {
+		public function totalTime(time:Number, suppressEvents:Boolean, uncapped:Boolean) {
 			if (!arguments.length) {
 				return _totalTime;
 			}
 			if (_timeline) {
-				if (time < 0) {
+				if (time < 0 && !uncapped) {
 					time += totalDuration();
 				}
 				if (_timeline.smoothChildTiming) {
 					if (_dirty) {
 						totalDuration();
 					}
-					if (time > _totalDuration) {
+					if (time > _totalDuration && !uncapped) {
 						time = _totalDuration;
 					}
 					_startTime = (_paused ? _pauseTime : _timeline._time) - ((!_reversed ? time : _totalDuration - time) / _timeScale);
@@ -399,7 +399,7 @@ class com.greensock.core.Animation {
 				_paused = value;
 				_active = Boolean(!value && _totalTime > 0 && _totalTime < _totalDuration);
 				if (!value && elapsed !== 0 && _duration !== 0) {
-					render(_time, true, true);
+					render(_totalTime, true, true);
 				}
 			}
 			if (_gc && !value) {

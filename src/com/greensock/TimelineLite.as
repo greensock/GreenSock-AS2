@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.5
- * DATE: 2013-03-25
+ * VERSION: 12.0.6
+ * DATE: 2013-04-03
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.5";
+		public static var version:String = "12.0.6";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		

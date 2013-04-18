@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.5
- * DATE: 2013-03-25
+ * VERSION: 12.0.7
+ * DATE: 2013-04-18
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -23,7 +23,7 @@ import fl.transitions.Tween;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.5";
+		public static var version:String = "12.0.7";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -95,7 +95,7 @@ class com.greensock.TweenLite extends Animation {
 		*/
 		
 		private function _init():Void {
-			var i:Number, initPlugins:Boolean, pt:Object;
+			var i:Number, initPlugins:Boolean, pt:Object, p:String, copy:Object;
 			if (vars.startAt) {
 				vars.startAt.overwrite = 0;
 				vars.startAt.immediateRender = true;
@@ -112,12 +112,14 @@ class com.greensock.TweenLite extends Animation {
 					_startAt.render(-1, true);
 					_startAt = null;
 				} else if (_time === 0) {
-					vars.overwrite = vars.delay = 0;
-					vars.runBackwards = false;
-					_startAt = new TweenLite(target, 0, vars);
-					vars.overwrite = _overwrite;
-					vars.runBackwards = true;
-					vars.delay = _delay;
+					copy = {};
+					for (p in vars) { //copy props into a new object and skip any reserved props, otherwise onComplete or onUpdate or onStart could fire. We should, however, permit autoCSS to go through.
+						if (_reservedProps[p] == null) {
+							copy[p] = vars[p];
+						}
+					}
+					copy.overwrite = 0;
+					_startAt = TweenLite.to(target, 0, copy);
 					return;
 				}
 			}
