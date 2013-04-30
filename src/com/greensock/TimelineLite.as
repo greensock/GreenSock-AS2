@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.6
- * DATE: 2013-04-03
+ * VERSION: 12.0.8
+ * DATE: 2013-04-27
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.6";
+		public static var version:String = "12.0.8";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -297,8 +297,11 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				if (!_reversed) if (!_hasPausedChild()) {
 					isComplete = true;
 					callback = "onComplete";
-					if (_duration === 0) if (time === 0 || _rawPrevTime < 0) if (_rawPrevTime !== time) { //In order to accommodate zero-duration timelines, we must discern the momentum/direction of time in order to render values properly when the "playhead" goes past 0 in the forward direction or lands directly on it, and also when it moves past it in the backward direction (from a postitive time to a negative time).
+					if (_duration === 0) if (time === 0 || _rawPrevTime < 0) if (_rawPrevTime !== time && _first) { //In order to accommodate zero-duration timelines, we must discern the momentum/direction of time in order to render values properly when the "playhead" goes past 0 in the forward direction or lands directly on it, and also when it moves past it in the backward direction (from a postitive time to a negative time).
 						internalForce = true;
+						if (_rawPrevTime > 0) {
+							callback = "onReverseComplete";
+						}
 					}
 				}
 				_rawPrevTime = time;
@@ -312,19 +315,20 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				}
 				if (time < 0) {
 					_active = false;
-					if (_duration == 0) if (_rawPrevTime >= 0) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
+					if (_duration == 0) if (_rawPrevTime >= 0 && _first) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
 						internalForce = true;
 					}
 				} else if (!_initted) {
 					internalForce = true;
 				}
 				_rawPrevTime = time;
+				time = 0; //to avoid occasional floating point rounding errors (could cause problems especially with zero-duration tweens at the very beginning of the timeline)
 				
 			} else {
 				_totalTime = _time = _rawPrevTime = time;
 			}
 			
-			if (_time === prevTime && !force && !internalForce) {
+			if ((_time === prevTime || !_first) && !force && !internalForce) {
 				return;
 			} else if (!_initted) {
 				_initted = true;

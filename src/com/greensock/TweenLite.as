@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.7
- * DATE: 2013-04-18
+ * VERSION: 12.0.8
+ * DATE: 2013-04-27
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -23,7 +23,7 @@ import fl.transitions.Tween;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.7";
+		public static var version:String = "12.0.8";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -235,6 +235,9 @@ class com.greensock.TweenLite extends Animation {
 				if (_duration === 0) { //zero-duration tweens are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
 					if (time === 0 || _rawPrevTime < 0) if (_rawPrevTime !== time) {
 						force = true;
+						if (_rawPrevTime > 0) {
+							callback = "onReverseComplete";
+						}
 					}
 					_rawPrevTime = time;
 				}

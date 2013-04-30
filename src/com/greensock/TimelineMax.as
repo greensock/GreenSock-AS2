@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.6
- * DATE: 2013-04-03
+ * VERSION: 12.0.8
+ * DATE: 2013-04-27
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.0.6";
+		public static var version:String = "12.0.8";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -89,9 +89,11 @@ class com.greensock.TimelineMax extends TimelineLite {
 		
 		public function tweenFromTo(fromPosition, toPosition, vars:Object):TweenLite {
 			vars = vars || {};
-			vars.startAt = {time:_parseTimeOrLabel(fromPosition)};
+			fromPosition = _parseTimeOrLabel(fromPosition);
+			vars.startAt = {onComplete:seek, onCompleteParams:[fromPosition]};
+			vars.immediateRender = (vars.immediateRender !== false);
 			var t:TweenLite = tweenTo(toPosition, vars);
-			return t.duration((Math.abs( t.vars.time - t.vars.startAt.time) / _timeScale) || 0.001);
+			return t.duration((Math.abs( t.vars.time - fromPosition) / _timeScale) || 0.001);
 		}
 		
 		public function render(time:Number, suppressEvents:Boolean, force:Boolean):Void {
@@ -116,8 +118,11 @@ class com.greensock.TimelineMax extends TimelineLite {
 				if (!_reversed) if (!_hasPausedChild()) {
 					isComplete = true;
 					callback = "onComplete";
-					if (_duration === 0) if (time === 0 || _rawPrevTime < 0) if (_rawPrevTime !== time) { //In order to accommodate zero-duration timelines, we must discern the momentum/direction of time in order to render values properly when the "playhead" goes past 0 in the forward direction or lands directly on it, and also when it moves past it in the backward direction (from a postitive time to a negative time).
+					if (_duration === 0) if (time === 0 || _rawPrevTime < 0) if (_rawPrevTime !== time && _first) { //In order to accommodate zero-duration timelines, we must discern the momentum/direction of time in order to render values properly when the "playhead" goes past 0 in the forward direction or lands directly on it, and also when it moves past it in the backward direction (from a postitive time to a negative time).
 						internalForce = true;
+						if (_rawPrevTime > 0) {
+							callback = "onReverseComplete";
+						}
 					}
 				}
 				_rawPrevTime = time;
@@ -139,7 +144,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 				}
 				if (time < 0) {
 					_active = false;
-					if (_duration == 0) if (_rawPrevTime >= 0) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
+					if (_duration == 0) if (_rawPrevTime >= 0 && _first) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
 						internalForce = true;
 					}
 				} else if (!_initted) {
@@ -219,7 +224,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 				_locked = false;
 			}
 
-			if (_time === prevTime && !force && !internalForce) {
+			if ((_time === prevTime || !_first) && !force && !internalForce) {
 				if (prevTotalTime !== _totalTime) if (_onUpdate != null) if (!suppressEvents) { //so that onUpdate fires even during the repeatDelay - as long as the totalTime changed, we should trigger onUpdate.
 					_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
 				}
