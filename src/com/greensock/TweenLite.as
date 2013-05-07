@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.8
- * DATE: 2013-04-27
+ * VERSION: 12.0.9
+ * DATE: 2013-05-07
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -23,7 +23,7 @@ import fl.transitions.Tween;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.8";
+		public static var version:String = "12.0.9";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -237,6 +237,9 @@ class com.greensock.TweenLite extends Animation {
 						force = true;
 						if (_rawPrevTime > 0) {
 							callback = "onReverseComplete";
+							if (suppressEvents) {
+								time = -1; //when a callback is placed at the VERY beginning of a timeline and it repeats (or if timeline.seek(0) is called), events are normally suppressed during those behaviors (repeat or seek()) and without adjusting the _rawPrevTime back slightly, the onComplete wouldn't get called on the next render. This only applies to zero-duration tweens/callbacks of course. 
+							}
 						}
 					}
 					_rawPrevTime = time;

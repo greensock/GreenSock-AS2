@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.8
- * DATE: 2013-04-27
+ * VERSION: 12.0.9
+ * DATE: 2013-05-07
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.0.8";
+		public static var version:String = "12.0.9";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero
@@ -141,6 +141,9 @@ class com.greensock.TweenMax extends TweenLite {
 						force = true;
 						if (_rawPrevTime > 0) {
 							callback = "onReverseComplete";
+							if (suppressEvents) {
+								time = -1; //when a callback is placed at the VERY beginning of a timeline and it repeats (or if timeline.seek(0) is called), events are normally suppressed during those behaviors (repeat or seek()) and without adjusting the _rawPrevTime back slightly, the onComplete wouldn't get called on the next render. This only applies to zero-duration tweens/callbacks of course. 
+							}
 						}
 					}
 					_rawPrevTime = time;
