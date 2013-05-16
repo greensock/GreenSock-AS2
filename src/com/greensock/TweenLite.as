@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.9
- * DATE: 2013-05-07
+ * VERSION: 12.0.10
+ * DATE: 2013-05-16
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -23,7 +23,7 @@ import fl.transitions.Tween;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.9";
+		public static var version:String = "12.0.10";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -427,7 +427,7 @@ class com.greensock.TweenLite extends Animation {
 							overwrittenProps[p] = 1;
 						}
 					}
-					if (_firstPT == null) { //if all tweening properties are killed, kill the tween. Without this line, if there's a tween with multiple targets and then you killTweensOf() each target individually, the tween would technically still remain active and fire its onComplete even though there aren't any more properties tweening. 
+					if (_firstPT == null && _initted) { //if all tweening properties are killed, kill the tween. Without this line, if there's a tween with multiple targets and then you killTweensOf() each target individually, the tween would technically still remain active and fire its onComplete even though there aren't any more properties tweening. 
 						_enabled(false, false);
 					}
 				}
@@ -631,7 +631,10 @@ class com.greensock.TweenLite extends Animation {
 		}
 		
 		private static function _checkOverlap(tween:Animation, reference:Number, zeroDur:Boolean):Number {
-			var tl:SimpleTimeline = tween._timeline, ts:Number = tl._timeScale, t:Number = tween._startTime;
+			var tl:SimpleTimeline = tween._timeline, 
+				ts:Number = tl._timeScale, 
+				t:Number = tween._startTime,
+				min:Number = 0.0000000001;
 			while (tl._timeline) {
 				t += tl._startTime;
 				ts *= tl._timeScale;
@@ -641,7 +644,7 @@ class com.greensock.TweenLite extends Animation {
 				tl = tl._timeline;
 			}
 			t /= ts;
-			return (t > reference) ? t - reference : ((zeroDur && t == reference) || (!tween._initted && t - reference < 0.0000000002)) ? 0.0000000001 : ((t = t + tween.totalDuration() / tween._timeScale / ts) > reference) ? 0 : t - reference - 0.0000000001;
+			return (t > reference) ? t - reference : ((zeroDur && t == reference) || (!tween._initted && t - reference < 2 * min)) ? min : ((t += tween.totalDuration() / tween._timeScale / ts) > reference + min) ? 0 : t - reference - min;
 		}
 		
 	

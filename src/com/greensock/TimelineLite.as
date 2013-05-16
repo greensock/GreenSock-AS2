@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.8
- * DATE: 2013-04-27
+ * VERSION: 12.0.10
+ * DATE: 2013-05-16
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.8";
+		public static var version:String = "12.0.10";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -51,7 +51,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 //---- CONVENIENCE METHODS START --------------------------------------
 		
 		public function to(target:Object, duration:Number, vars:Object, position) {
-			return add( new TweenLite(target, duration, vars), position); 
+			return duration ? add( new TweenLite(target, duration, vars), position) : set(target, vars, position); 
 		}
 		
 		public function from(target:Object, duration:Number, vars:Object, position) {
@@ -59,7 +59,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		}
 		
 		public function fromTo(target:Object, duration:Number, fromVars:Object, toVars:Object, position) {
-			return add( TweenLite.fromTo(target, duration, fromVars, toVars), position);
+			return duration ? add( TweenLite.fromTo(target, duration, fromVars, toVars), position) : set(target, toVars, position);
 		}
 		
 		public function staggerTo(targets:Array, duration:Number, vars:Object, stagger:Number, position, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
@@ -69,7 +69,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				if (vars.startAt != null) {
 					vars.startAt = _copy(vars.startAt);
 				}
-				tl.add( new TweenLite(targets[i], duration, _copy(vars)), i * stagger);
+				tl.to(targets[i], duration, _copy(vars), i * stagger);
 			}
 			return add(tl, position);
 		}

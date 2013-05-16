@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.8
- * DATE: 2013-04-27
+ * VERSION: 12.0.10
+ * DATE: 2013-05-16
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.0.8";
+		public static var version:String = "12.0.10";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
