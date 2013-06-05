@@ -1,14 +1,12 @@
 ﻿/**
- * VERSION: 12.0.10
- * DATE: 2013-05-16
+ * VERSION: 12.0.11
+ * DATE: 2013-06-05
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
 import com.greensock.core.Animation;
 import com.greensock.core.SimpleTimeline;
 import com.greensock.easing.Ease;
-
-import fl.transitions.Tween;
 
 /**
  * 	TweenLite is an extremely fast, lightweight, and flexible tweening engine that serves as the foundation of 
@@ -23,7 +21,7 @@ import fl.transitions.Tween;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.10";
+		public static var version:String = "12.0.11";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;

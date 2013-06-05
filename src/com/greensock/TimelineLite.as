@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.10
- * DATE: 2013-05-16
+ * VERSION: 12.0.11
+ * DATE: 2013-06-05
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.10";
+		public static var version:String = "12.0.11";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -51,7 +51,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 //---- CONVENIENCE METHODS START --------------------------------------
 		
 		public function to(target:Object, duration:Number, vars:Object, position) {
-			return duration ? add( new TweenLite(target, duration, vars), position) : set(target, vars, position); 
+			return duration ? add( new TweenLite(target, duration, vars), position) : this.set(target, vars, position); 
 		}
 		
 		public function from(target:Object, duration:Number, vars:Object, position) {
@@ -59,7 +59,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		}
 		
 		public function fromTo(target:Object, duration:Number, fromVars:Object, toVars:Object, position) {
-			return duration ? add( TweenLite.fromTo(target, duration, fromVars, toVars), position) : set(target, toVars, position);
+			return duration ? add( TweenLite.fromTo(target, duration, fromVars, toVars), position) : this.set(target, toVars, position);
 		}
 		
 		public function staggerTo(targets:Array, duration:Number, vars:Object, stagger:Number, position, onCompleteAll:Function, onCompleteAllParams:Array, onCompleteAllScope:Object) {
@@ -204,6 +204,17 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				return removeLabel(String(value));
 			}
 			return kill(null, value);
+		}
+		
+		public function _remove(tween:Animation, skipDisable:Boolean) {
+			super._remove(tween, skipDisable);
+			if (!_last) {
+				_time = _totalTime = 0;
+			} else if (_time > _last._startTime) {
+				_time = duration();
+				_totalTime = _totalDuration;
+			}
+			return this;
 		}
 		
 		public function append(value, offsetOrLabel) {

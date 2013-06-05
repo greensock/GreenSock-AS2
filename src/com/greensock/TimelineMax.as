@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.10
- * DATE: 2013-05-16
+ * VERSION: 12.0.11
+ * DATE: 2013-06-05
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.0.10";
+		public static var version:String = "12.0.11";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -52,15 +52,17 @@ class com.greensock.TimelineMax extends TimelineLite {
 		}
 		
 		public function removeCallback(callback:Function, position):TimelineMax {
-			if (position == null) {
-				_kill(null, callback);
-			} else {
-				var a:Array = getTweensOf(callback, false),
-					i:Number = a.length,
-					time:Number = _parseTimeOrLabel(position);
-				while (--i > -1) {
-					if (a[i]._startTime === time) {
-						a[i]._enabled(false, false);
+			if (callback != null) {
+				if (position == null) {
+					_kill(null, callback);
+				} else {
+					var a:Array = getTweensOf(callback, false),
+						i:Number = a.length,
+						time:Number = _parseTimeOrLabel(position);
+					while (--i > -1) {
+						if (a[i]._startTime === time) {
+							a[i]._enabled(false, false);
+						}
 					}
 				}
 			}
@@ -217,11 +219,14 @@ class com.greensock.TimelineMax extends TimelineLite {
 					prevTime = (backwards) ? _duration + 0.000001 : -0.000001;
 					render(prevTime, true, false);
 				}
+				_locked = false;
+				if (_paused && !prevPaused) { //if the render() triggered callback that paused this timeline, we should abort (very rare, but possible)
+					return;
+				}
 				_time = recTime;
 				_totalTime = recTotalTime;
 				_cycle = recCycle;
 				_rawPrevTime = recRawPrevTime;
-				_locked = false;
 			}
 
 			if ((_time === prevTime || !_first) && !force && !internalForce) {
