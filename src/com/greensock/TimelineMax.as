@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.11
- * DATE: 2013-06-05
+ * VERSION: 12.0.12
+ * DATE: 2013-07-03
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.0.11";
+		public static var version:String = "12.0.12";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -102,7 +102,6 @@ class com.greensock.TimelineMax extends TimelineLite {
 			if (_gc) {
 				_enabled(true, false);
 			}
-			_active = !_paused;
 			var totalDur:Number = (!_dirty) ? _totalDuration : totalDuration(), 
 				prevTime:Number = _time, 
 				prevTotalTime:Number = _totalTime, 
@@ -236,6 +235,10 @@ class com.greensock.TimelineMax extends TimelineLite {
 				return;
 			} else if (!_initted) {
 				_initted = true;
+			}
+			
+			if (!_active) if (!_paused && _totalTime !== prevTotalTime && time > 0) {
+				_active = true;  //so that if the user renders the timeline (as opposed to the parent timeline rendering it), it is forced to re-render and align it with the proper time/frame on the next rendering cycle. Maybe the timeline already finished but the user manually re-renders it as halfway done, for example.
 			}
 			
 			if (prevTotalTime === 0) if (vars.onStart) if (_totalTime !== 0) if (!suppressEvents) {

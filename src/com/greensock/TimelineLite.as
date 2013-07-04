@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.11
- * DATE: 2013-06-05
+ * VERSION: 12.0.12
+ * DATE: 2013-07-03
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.11";
+		public static var version:String = "12.0.12";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -88,7 +88,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			return staggerTo(targets, duration, toVars, stagger, position, onCompleteAll, onCompleteAllParams, onCompleteAllScope);
 		}
 		
-		public function call(callback:Function, params:Array, scope:Object, position) {
+		public function call(callback:Function, params:Array, scope, position) {
 			return add( TweenLite.delayedCall(0, callback, params, scope), position);
 		}
 		
@@ -98,6 +98,17 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				vars.immediateRender = (position === _time && !_paused);
 			}
 			return add( new TweenLite(target, 0, vars), position);
+		}
+		
+		public function addPause(position, callback:Function, params:Array, scope) {
+			return this.call(_pauseCallback, ["{self}", callback, params, scope], this, position);
+		}
+		
+		private function _pauseCallback(tween:TweenLite, callback:Function, params:Array, scope):Void {
+			this.pause(tween._startTime);
+			if (callback != null) {
+				callback.apply(scope, params);
+			}
 		}
 		
 		private static function _copy(vars:Object):Object {
@@ -296,7 +307,6 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			if (_gc) {
 				_enabled(true, false);
 			}
-			_active = !_paused; 
 			var totalDur:Number = (!_dirty) ? _totalDuration : totalDuration(), 
 				prevTime:Number = _time, 
 				prevStart:Number = _startTime, 
@@ -343,6 +353,9 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				return;
 			} else if (!_initted) {
 				_initted = true;
+			}
+			if (!_active) if (!_paused && _time !== prevTime && time > 0) {
+				_active = true;  //so that if the user renders the timeline (as opposed to the parent timeline rendering it), it is forced to re-render and align it with the proper time/frame on the next rendering cycle. Maybe the timeline already finished but the user manually re-renders it as halfway done, for example.
 			}
 			if (prevTime === 0) if (vars.onStart) if (_time !== 0) if (!suppressEvents) {
 				vars.onStart.apply(vars.onStartScope || this, vars.onStartParams);
