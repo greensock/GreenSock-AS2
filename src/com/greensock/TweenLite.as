@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.12
- * DATE: 2013-07-03
+ * VERSION: 12.0.13
+ * DATE: 2013-07-10
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -21,7 +21,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.12";
+		public static var version:String = "12.0.13";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -163,20 +163,15 @@ class com.greensock.TweenLite extends Animation {
 		}
 		
 		private function _initProps(target:Object, propLookup:Object, siblings:Array, overwrittenProps:Object):Boolean {
-			var p:String, i:Number, initPlugins:Boolean, plugin:Object, a:Array;
+			var p:String, i:Number, initPlugins:Boolean, plugin:Object, val;
 			if (target == null) {
 				return false;
 			}
 			for (p in vars) {
+				val = vars[p];
 				if (_reservedProps[p]) { 
-					if (p === "onStartParams" || p === "onUpdateParams" || p === "onCompleteParams" || p === "onReverseCompleteParams" || p === "onRepeatParams") if ((a = vars[p])) {
-						i = a.length;
-						while (--i > -1) {
-							if (a[i] === "{self}") {
-								a = vars[p] = a.concat(); //copy the array in case the user referenced the same array in multiple tweens/timelines (each {self} should be unique)
-								a[i] = this;
-							}
-						}
+					if (val instanceof Array) if (val.join("").indexOf("{self}") !== -1) {
+						vars[p] = _swapSelfInParams(val);
 					}
 					
 				} else if (_plugins[p] && (plugin = new _plugins[p]())._onInitTween(target, vars[p], this)) {
@@ -204,7 +199,7 @@ class com.greensock.TweenLite extends Animation {
 				} else {
 					_firstPT = propLookup[p] = {_next:_firstPT, t:target, p:p, f:(typeof(target[p]) === "function"), n:p, pg:false, pr:0};
 					_firstPT.s = (!_firstPT.f) ? Number(target[p]) : target[ ((p.indexOf("set") || typeof(target["get" + p.substr(3)]) !== "function") ? p : "get" + p.substr(3)) ]();
-					_firstPT.c = (typeof(vars[p]) === "number") ? Number(vars[p]) - _firstPT.s : (typeof(vars[p]) === "string" && vars[p].charAt(1) === "=") ? Number(vars[p].charAt(0)+"1") * Number(vars[p].substr(2)) : Number(vars[p]) || 0;
+					_firstPT.c = (typeof(val) === "number") ? Number(val) - _firstPT.s : (typeof(val) === "string" && val.charAt(1) === "=") ? Number(val.charAt(0)+"1") * Number(val.substr(2)) : Number(val) || 0;
 				}
 				if (_firstPT) if (_firstPT._next) {
 					_firstPT._next._prev = _firstPT;

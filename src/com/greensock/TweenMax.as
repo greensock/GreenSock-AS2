@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.12
- * DATE: 2013-07-03
+ * VERSION: 12.0.13
+ * DATE: 2013-07-10
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.0.12";
+		public static var version:String = "12.0.13";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero
@@ -328,7 +328,7 @@ class com.greensock.TweenMax extends TweenLite {
 				if (i == l - 1) if (onCompleteAll != null) {
 					copy.onComplete = function():Void {
 						if (vars.onComplete) {
-							vars.onComplete.apply(vars.onCompleteScope || this, vars.onCompleteParams);
+							vars.onComplete.apply(vars.onCompleteScope || this, arguments);
 						}
 						onCompleteAll.apply(onCompleteAllScope, onCompleteAllParams);
 					}

@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.12
- * DATE: 2013-07-03
+ * VERSION: 12.0.13
+ * DATE: 2013-07-10
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.12";
+		public static var version:String = "12.0.13";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -29,17 +29,11 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			smoothChildTiming = (this.vars.smoothChildTiming == true);
 			_sortChildren = true;
 			_onUpdate = this.vars.onUpdate;
-			var i:Number = _paramProps.length,
-				j:Number, a:Array;
-			while (--i > -1) {
-				if ((a = this.vars[_paramProps[i]])) {
-					j = a.length;
-					while (--j > -1) {
-						if (a[j] === "{self}") {
-							a = this.vars[_paramProps[i]] = a.concat(); //copy the array in case the user referenced the same array in multiple timelines/tweens (each {self} should be unique)
-							a[j] = this;
-						}
-					}
+			var val, p:String;
+			for (p in this.vars) {
+				val = this.vars[p];
+				if (val instanceof Array) if (val.join("").indexOf("{self}") !== -1) {
+					this.vars[p] = _swapSelfInParams(val);
 				}
 			}
 			if (this.vars.tweens instanceof Array) {

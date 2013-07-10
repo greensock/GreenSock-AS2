@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.7
- * DATE: 2013-04-18
+ * VERSION: 12.0.13
+ * DATE: 2013-07-10
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -16,7 +16,7 @@ import com.greensock.core.SimpleTimeline;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.core.Animation {
-		public static var version:String = "12.0.7";
+		public static var version:String = "12.0.13";
 		public static var ticker:MovieClip = _jumpStart(_root);
 		private static var _rootFrame:Number = -1;
 		public static var _rootTimeline:SimpleTimeline;
@@ -233,6 +233,18 @@ class com.greensock.core.Animation {
 			return ticker;
 		}
 		
+		/** @private **/
+		private function _swapSelfInParams(params:Array):Array {
+			var i:Number = params.length,
+				copy:Array = params.concat();
+			while (--i > -1) {
+				if (params[i] === "{self}") {
+					copy[i] = this;
+				}
+			}
+			return copy;
+		}
+		
 		
 		
 //---- GETTERS / SETTERS ------------------------------------------------------------
@@ -248,17 +260,8 @@ class com.greensock.core.Animation {
 					delete vars[type];
 				} else {
 					vars[type] = callback;
-					vars[type + "Params"] = params;
+					vars[type + "Params"] = ((params instanceof Array) && params.join("").indexOf("{self}") !== -1) ? _swapSelfInParams(params) : params;;
 					vars[type + "Scope"] = scope;
-					if (params) {
-						var i:Number = params.length;
-						while (--i > -1) {
-							if (params[i] === "{self}") {
-								params = vars[type + "Params"] = params.concat(); //copying the array avoids situations where the same array is passed to multiple tweens/timelines and {self} doesn't correctly point to each individual instance.
-								params[i] = this;
-							}
-						}
-					}
 				}
 				if (type === "onUpdate") {
 					_onUpdate = callback;
@@ -324,15 +327,17 @@ class com.greensock.core.Animation {
 					if (time > _totalDuration && !uncapped) {
 						time = _totalDuration;
 					}
-					_startTime = (_paused ? _pauseTime : _timeline._time) - ((!_reversed ? time : _totalDuration - time) / _timeScale);
+					var tl:SimpleTimeline = _timeline;
+					_startTime = (_paused ? _pauseTime : tl._time) - ((!_reversed ? time : _totalDuration - time) / _timeScale);
 					if (!_timeline._dirty) { //for performance improvement. If the parent's cache is already dirty, it already took care of marking the anscestors as dirty too, so skip the function call here.
 						_uncache(false);
 					}
-					if (!_timeline._active) {
-						//in case any of the anscestors had completed but should now be enabled...
-						var tl:SimpleTimeline = _timeline;
+					//in case any of the ancestor timelines had completed but should now be enabled, we should reset their totalTime() which will also ensure that they're lined up properly and enabled. Skip for animations that are on the root (wasteful). Example: a TimelineLite.exportRoot() is performed when there's a paused tween on the root, the export will not complete until that tween is unpaused, but imagine a child gets restarted later, after all [unpaused] tweens have completed. The startTime of that child would get pushed out, but one of the ancestors may have completed.
+					if (tl._timeline != null) { 
 						while (tl._timeline) {
-							tl.totalTime(tl._totalTime, true);
+							if (tl._timeline._time !== (tl._startTime + tl._totalTime) / tl._timeScale) {
+								tl.totalTime(tl._totalTime, true);
+							}
 							tl = tl._timeline;
 						}
 					}
@@ -399,7 +404,7 @@ class com.greensock.core.Animation {
 				_paused = value;
 				_active = Boolean(!value && _totalTime > 0 && _totalTime < _totalDuration);
 				if (!value && elapsed !== 0 && _duration !== 0) {
-					render(_totalTime, true, true);
+					render((_timeline.smoothChildTiming ? _totalTime : (raw - _startTime) / _timeScale), true, true); //in case the target's properties changed via some other tween or manual update by the user, we should force a render.
 				}
 			}
 			if (_gc && !value) {

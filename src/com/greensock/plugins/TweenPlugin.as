@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.0
- * DATE: 2013-01-21
+ * VERSION: 12.0.13
+ * DATE: 2013-07-10
  * AS2
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -17,7 +17,7 @@ import com.greensock.plugins.RoundPropsPlugin;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.plugins.TweenPlugin {
-		public static var version:String = "12.0.0";
+		public static var version:String = "12.0.13";
 		public static var API:Number = 2.0; //If the API/Framework for plugins changes in the future, this number helps determine compatibility
 		public var _propName:String;
 		public var _overwriteProps:Array;
@@ -34,14 +34,16 @@ class com.greensock.plugins.TweenPlugin {
 			return false;
 		}
 		
-		private function _addTween(target:Object, propName:String, start:Number, end:Object, overwriteProp:String, round:Boolean):Void {
+		private function _addTween(target:Object, propName:String, start:Number, end:Object, overwriteProp:String, round:Boolean):PropTween {
 			var c:Number;
 			if (end != null && (c = (typeof(end) == "number" || end.charAt(1) !== "=") ? Number(end) - start : Number(end.charAt(0)+"1") * Number(end.substr(2)))) {
 				_firstPT = {_next:_firstPT, t:target, p:propName, s:start, c:c, f:(typeof(target[propName]) == "function"), n:overwriteProp || propName, r:round};
 				if (_firstPT._next) {
 					_firstPT._next._prev = _firstPT;
 				}
+				return _firstPT;
 			}
+			return null;
 		}
 		
 		public function setRatio(v:Number):Void {
@@ -49,7 +51,7 @@ class com.greensock.plugins.TweenPlugin {
 			while (pt) {
 				val = pt.c * v + pt.s;
 				if (pt.r) {
-					val = (val > 0) ? (val + 0.5) >> 0 : (val - 0.5) >> 0; //about 4x faster than Math.round()
+					val = (val + ((val > 0) ? 0.5 : -0.5)) | 0; //about 4x faster than Math.round()
 				}
 				if (pt.f) {
 					pt.t[pt.p](val);
