@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.13
- * DATE: 2013-07-10
+ * VERSION: 12.0.14
+ * DATE: 2013-07-27
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -21,7 +21,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.13";
+		public static var version:String = "12.0.14";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -93,18 +93,23 @@ class com.greensock.TweenLite extends Animation {
 		*/
 		
 		private function _init():Void {
-			var i:Number, initPlugins:Boolean, pt:Object, p:String, copy:Object;
+			var immediate:Boolean = vars.immediateRender,
+				i:Number, initPlugins:Boolean, pt:Object, p:String, copy:Object;
 			if (vars.startAt) {
+				if (_startAt != null) {
+					_startAt.render(-1, true); //if we've run a startAt previously (when the tween instantiated), we should revert it so that the values re-instantiate correctly particularly for relative tweens. Without this, a TweenLite.fromTo(obj, 1, {x:"+=100"}, {x:"-=100"}), for example, would actually jump to +=200 because the startAt would run twice, doubling the relative change.
+				}
 				vars.startAt.overwrite = 0;
 				vars.startAt.immediateRender = true;
 				_startAt = new TweenLite(target, 0, vars.startAt);
-				if (vars.immediateRender) {
-					_startAt = null; //tweens that render immediately (like most from() and fromTo() tweens) shouldn't revert when their parent timeline's playhead goes backward past the startTime because the initial render could have happened anytime and it shouldn't be directly correlated to this tween's startTime. Imagine setting up a complex animation where the beginning states of various objects are rendered immediately but the tween doesn't happen for quite some time - if we revert to the starting values as soon as the playhead goes backward past the tween's startTime, it will throw things off visually. Reversion should only happen in TimelineLite/Max instances where immediateRender was false (which is the default in the convenience methods like from()).
-					if (_time === 0 && _duration !== 0) {
+				if (immediate) {
+					if (_time > 0) {
+						_startAt = null; //tweens that render immediately (like most from() and fromTo() tweens) shouldn't revert when their parent timeline's playhead goes backward past the startTime because the initial render could have happened anytime and it shouldn't be directly correlated to this tween's startTime. Imagine setting up a complex animation where the beginning states of various objects are rendered immediately but the tween doesn't happen for quite some time - if we revert to the starting values as soon as the playhead goes backward past the tween's startTime, it will throw things off visually. Reversion should only happen in TimelineLite/Max instances where immediateRender was false (which is the default in the convenience methods like from()).
+					} else if (_duration !== 0) {
 						return; //we skip initialization here so that overwriting doesn't occur until the tween actually begins. Otherwise, if you create several immediateRender:true tweens of the same target/properties to drop into a TimelineLite or TimelineMax, the last one created would overwrite the first ones because they didn't get placed into the timeline yet before the first render occurs and kicks in overwriting.
 					}
 				}
-			} else if (vars.runBackwards && vars.immediateRender && _duration !== 0) {
+			} else if (immediate && vars.runBackwards && _duration !== 0) {
 				//from() tweens must be handled uniquely: their beginning values must be rendered but we don't want overwriting to occur yet (when time is still 0). Wait until the tween actually begins before doing all the routines like overwriting. At that time, we should render at the END of the tween to ensure that things initialize correctly (remember, from() tweens go backwards)
 				if (_startAt != null) {
 					_startAt.render(-1, true);
