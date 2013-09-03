@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.14
- * DATE: 2013-07-27
+ * VERSION: 12.0.15
+ * DATE: 2013-09-02
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.0.14";
+		public static var version:String = "12.0.15";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -180,12 +180,13 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			super.add(value, position);
 			
 			//if the timeline has already ended but the inserted tween/timeline extends the duration, we should enable this timeline again so that it renders properly.  
-			if (_gc) if (!_paused) if (_time === _duration) if (_time < duration()) {
+			if (_gc) if (!_paused) if (_duration < duration()) {
 				//in case any of the anscestors had completed but should now be enabled...
-				var tl:SimpleTimeline = this;
+				var tl:SimpleTimeline = this,
+					beforeRawTime:Boolean = (tl.rawTime() > value._startTime); //if the tween is placed on the timeline so that it starts BEFORE the current rawTime, we should align the playhead (move the timeline). This is because sometimes users will create a timeline, let it finish, and much later append a tween and expect it to run instead of jumping to its end state. While technically one could argue that it should jump to its end state, that's not what users intuitively expect.
 				while (tl._gc && tl._timeline) {
-					if (tl._timeline.smoothChildTiming) {
-						tl.totalTime(tl._totalTime, true); //also enables them
+					if (tl._timeline.smoothChildTiming && beforeRawTime) {
+						tl.totalTime(tl._totalTime, true); //moves the timeline (shifts its startTime) if necessary, and also enables it. 
 					} else {
 						tl._enabled(true, false);
 					}
@@ -612,7 +613,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		}
 		
 		public function rawTime():Number {
-			return (_paused || (_totalTime !== 0 && _totalTime !== _totalDuration)) ? _totalTime : (_timeline.rawTime() - _startTime) * _timeScale;
+			return _paused ? _totalTime : (_timeline.rawTime() - _startTime) * _timeScale;
 		}
 	
 }
