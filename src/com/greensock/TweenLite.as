@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.15
- * DATE: 2013-09-02
+ * VERSION: 12.0.16
+ * DATE: 2013-09-10
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -21,7 +21,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.0.15";
+		public static var version:String = "12.0.16";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -402,7 +402,7 @@ class com.greensock.TweenLite extends Animation {
 				
 				if (propLookup) {
 					killProps = vars || propLookup;
-					record = (vars != overwrittenProps && overwrittenProps != "all" && vars != propLookup && (vars == null || vars._tempKill != true)); //_tempKill is a super-secret way to delete a particular tweening property but NOT have it remembered as an official overwritten property (like in BezierPlugin)
+					record = (vars != overwrittenProps && overwrittenProps != "all" && vars != propLookup && (typeof(vars) != "object" || vars._tempKill != true)); //_tempKill is a super-secret way to delete a particular tweening property but NOT have it remembered as an official overwritten property (like in BezierPlugin)
 					for (p in killProps) {
 						if ((pt = propLookup[p])) {
 							if (pt.pg && pt.t._kill(killProps)) {
