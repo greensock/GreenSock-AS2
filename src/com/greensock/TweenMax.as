@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.0.16
- * DATE: 2013-09-10
+ * VERSION: 12.1.0
+ * DATE: 2013-10-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.0.16";
+		public static var version:String = "12.1.0";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero
@@ -117,11 +117,14 @@ class com.greensock.TweenMax extends TweenLite {
 		}
 				
 		public function render(time:Number, suppressEvents:Boolean, force:Boolean):Void {
+			if (!_initted) if (_duration === 0 && vars.repeat) { //zero duration tweens that render immediately have render() called from TweenLite's constructor, before TweenMax's constructor has finished setting _repeat, _repeatDelay, and _yoyo which are critical in determining totalDuration() so we need to call invalidate() which is a low-kb way to get those set properly.
+				invalidate();
+			}
 			var totalDur:Number = (!_dirty) ? _totalDuration : totalDuration(), 
 				prevTime:Number = _time,
 				prevTotalTime:Number = _totalTime, 
 				prevCycle:Number = _cycle, 
-				isComplete:Boolean, callback:String, pt:Object;
+				isComplete:Boolean, callback:String, pt:Object, rawPrevTime:Number;
 			if (time >= totalDur) {
 				_totalTime = totalDur;
 				_cycle = _repeat;
@@ -137,22 +140,20 @@ class com.greensock.TweenMax extends TweenLite {
 					callback = "onComplete";
 				}
 				if (_duration === 0) { //zero-duration tweens are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
-					if (time === 0 || _rawPrevTime < 0) if (_rawPrevTime !== time) {
+					rawPrevTime = _rawPrevTime;
+					if (time === 0 || rawPrevTime < 0 || rawPrevTime === _tinyNum) if (rawPrevTime !== time) {
 						force = true;
-						if (_rawPrevTime > 0) {
+						if (rawPrevTime > _tinyNum) {
 							callback = "onReverseComplete";
-							if (suppressEvents) {
-								time = -1; //when a callback is placed at the VERY beginning of a timeline and it repeats (or if timeline.seek(0) is called), events are normally suppressed during those behaviors (repeat or seek()) and without adjusting the _rawPrevTime back slightly, the onComplete wouldn't get called on the next render. This only applies to zero-duration tweens/callbacks of course. 
-							}
 						}
 					}
-					_rawPrevTime = time;
+					_rawPrevTime = rawPrevTime = (!suppressEvents || time !== 0) ? time : _tinyNum; //when the playhead arrives at EXACTLY time 0 (right on top) of a zero-duration tween, we need to discern if events are suppressed so that when the playhead moves again (next time), it'll trigger the callback. If events are NOT suppressed, obviously the callback would be triggered in this render. Basically, the callback should fire either when the playhead ARRIVES or LEAVES this exact spot, not both. Imagine doing a timeline.seek(0) and there's a callback that sits at 0. Since events are suppressed on that seek() by default, nothing will fire, but when the playhead moves off of that position, the callback should fire. This behavior is what people intuitively expect. We set the _rawPrevTime to be a precise tiny number to indicate this scenario rather than using another property/variable which would increase memory usage. This technique is less readable, but more efficient.
 				}
 				
 			} else if (time < 0.0000001) { //to work around occasional floating point math artifacts, round super small values to 0. 
 				_totalTime = _time = _cycle = 0;
 				ratio = _ease._calcEnd ? _ease.getRatio(0) : 0;
-				if (prevTotalTime != 0 || (_duration == 0 && _rawPrevTime > 0)) {
+				if (prevTotalTime != 0 || (_duration == 0 && _rawPrevTime > _tinyNum)) {
 					callback = "onReverseComplete";
 					isComplete = _reversed;
 				}
@@ -162,7 +163,7 @@ class com.greensock.TweenMax extends TweenLite {
 						if (_rawPrevTime >= 0) {
 							force = true;
 						}
-						_rawPrevTime = time;
+						_rawPrevTime = rawPrevTime = (!suppressEvents || time !== 0) ? time : _tinyNum; //when the playhead arrives at EXACTLY time 0 (right on top) of a zero-duration tween, we need to discern if events are suppressed so that when the playhead moves again (next time), it'll trigger the callback. If events are NOT suppressed, obviously the callback would be triggered in this render. Basically, the callback should fire either when the playhead ARRIVES or LEAVES this exact spot, not both. Imagine doing a timeline.seek(0) and there's a callback that sits at 0. Since events are suppressed on that seek() by default, nothing will fire, but when the playhead moves off of that position, the callback should fire. This behavior is what people intuitively expect. We set the _rawPrevTime to be a precise tiny number to indicate this scenario rather than using another property/variable which would increase memory usage. This technique is less readable, but more efficient.
 					}
 				} else if (!_initted) { //if we render the very beginning (time == 0) of a fromTo(), we must force the render (normal tweens wouldn't need to render at a time of 0 when the prevTime was also 0). This is also mandatory to make sure overwriting kicks in immediately.
 					force = true;
@@ -221,14 +222,14 @@ class com.greensock.TweenMax extends TweenLite {
 				
 			}
 			
-			if (prevTime === _time && !force) {
+			if (prevTime === _time && !force && _cycle === prevCycle) {
 				if (prevTotalTime !== _totalTime) if (_onUpdate != null) if (!suppressEvents) { //so that onUpdate fires even during the repeatDelay - as long as the totalTime changed, we should trigger onUpdate.
 					_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
 				}
 				return;
 			} else if (!_initted) {
 				_init();
-				if (!_initted) { //immediateRender tweens typically won't initialize until the playhead advances (_time is greater than 0) in order to ensure that overwriting occurs properly.
+				if (!_initted || _gc) { //immediateRender tweens typically won't initialize until the playhead advances (_time is greater than 0) in order to ensure that overwriting occurs properly. Also, if all of the tweening properties have been overwritten (which would cause _gc to be true, as set in _init()), we shouldn't continue otherwise an onStart callback could be called for example. 
 					return;
 				}
 				//_ease is initially set to defaultEase, so now that init() has run, _ease is set properly and we need to recalculate the ratio. Overall this is faster than using conditional logic earlier in the method to avoid having to set ratio twice because we only init() once but renderTime() gets called VERY frequently.
@@ -265,7 +266,7 @@ class com.greensock.TweenMax extends TweenLite {
 			}
 			
 			if (_onUpdate != null) {
-				if (time < 0 && _startAt != null) {
+				if (time < 0 && _startAt != null && _startTime != 0) { //if the tween is positioned at the VERY beginning (_startTime 0) of its parent timeline, it's illegal for the playhead to go back further, so we should not render the recorded startAt values.
 					_startAt.render(time, suppressEvents, force); //note: for performance reasons, we tuck this conditional logic inside less traveled areas (most tweens don't have an onUpdate). We'd just have it at the end before the onComplete, but the values should be updated before any onUpdate is called, so we ALSO put it here and then if it's not called, we do so later near the onComplete.
 				}
 				if (!suppressEvents) {
@@ -276,7 +277,7 @@ class com.greensock.TweenMax extends TweenLite {
 				vars.onRepeat.apply(vars.onRepeatScope || this, vars.onRepeatParams);
 			}
 			if (callback) if (!_gc) { //check gc because there's a chance that kill() could be called in an onUpdate
-				if (time < 0 && _startAt != null && _onUpdate == null) {
+				if (time < 0 && _startAt != null && _onUpdate == null && _startTime != 0) { //if the tween is positioned at the VERY beginning (_startTime 0) of its parent timeline, it's illegal for the playhead to go back further, so we should not render the recorded startAt values.
 					_startAt.render(time, suppressEvents, true);
 				}
 				if (isComplete) {
@@ -287,6 +288,9 @@ class com.greensock.TweenMax extends TweenLite {
 				}
 				if (!suppressEvents) if (vars[callback]) {
 					vars[callback].apply(vars[callback + "Scope"] || this, vars[callback + "Params"]);
+				}
+				if (_duration === 0 && _rawPrevTime !== rawPrevTime) { //the onComplete or onReverseComplete could trigger movement of the playhead and for zero-duration tweens (which must discern direction), we don't want to fire again on the next render. Think of several addPause()'s in a timeline that forces the playhead to a certain spot, but what if it's already paused and another tween is tweening the "time" of the timeline? Each time it moves [forward] past that spot, it would move back, and since suppressEvents is true, it'd reset _rawPrevTime to -1 so that when it begins again, the callback would fire properly (so ultimately it could bounce back and forth during that tween). Again, this is a very uncommon scenario, but possible nonetheless.
+					_rawPrevTime = 0;
 				}
 			}
 		}
@@ -366,15 +370,7 @@ class com.greensock.TweenMax extends TweenLite {
 		}
 		
 		public static function isTweening(target:Object):Boolean {
-			var a:Array = TweenLite.getTweensOf(target),
-				i:Number = a.length,
-				tween:TweenLite;
-			while (--i > -1) {
-				if (((tween = a[i])._active || (tween._startTime == tween.timeline._time && tween.timeline._active))) {
-					return true;
-				}
-			}
-			return false;
+			return (TweenLite.getTweensOf(target, true).length > 0);
 		}
 		
 		public static function getAllTweens(includeTimelines:Boolean):Array {
@@ -427,28 +423,40 @@ class com.greensock.TweenMax extends TweenLite {
 				}
 			}
 		}
-
+		
 		public static function killChildTweensOf(parent:MovieClip, complete:Boolean):Void {
 			var a:Array = getAllTweens(false),
-				curTarget:Object, curParent:MovieClip,
-				l:Number = a.length,
-				i:Number;
+				l:Number = a.length, i:Number;
 			for (i = 0; i < l; i++) {
-				curTarget = a[i].target;
-				if (curTarget instanceof MovieClip) {
-					curParent = curTarget._parent;
-					while (curParent) {
-						if (curParent == parent) {
-							if (complete) {
-								a[i].totalTime(a[i].totalDuration());
-							} else {
-								a[i]._enabled(false, false);
-							}
-						}
-						curParent = curParent._parent;
+				if (_containsChildOf(parent, a[i].target)) {
+					if (complete) {
+						a[i].totalTime(a[i].totalDuration());
+					} else {
+						a[i]._enabled(false, false);
 					}
 				}
 			}
+		}
+		
+		private static function _containsChildOf(parent:MovieClip, obj:Object):Boolean {
+			var i:Number, curParent:MovieClip;
+			if (obj instanceof Array) {
+				i = obj.length;
+				while (--i > -1) {
+					if (_containsChildOf(parent, obj[i])) {
+						return true;
+					}
+				}
+			} else if (typeof(obj) === "object" && obj._parent instanceof MovieClip) {
+				curParent = obj._parent;
+				while (curParent) {
+					if (curParent == parent) {
+						return true;
+					}
+					curParent = curParent._parent;
+				}
+			}
+			return false;
 		}
 		
 		public static function pauseAll(tweens:Boolean, delayedCalls:Boolean, timelines:Boolean):Void {
@@ -482,12 +490,12 @@ class com.greensock.TweenMax extends TweenLite {
 	
 //---- GETTERS / SETTERS ----------------------------------------------------------------------------------------------------------
 		
-		public function progress(value:Number) {
-			return (!arguments.length) ? _time / duration() : totalTime( duration() * ((_yoyo && (_cycle & 1) !== 0) ? 1 - value : value) + (_cycle * (_duration + _repeatDelay)), false);
+		public function progress(value:Number, suppressEvents:Boolean) {
+			return (!arguments.length) ? _time / duration() : totalTime( duration() * ((_yoyo && (_cycle & 1) !== 0) ? 1 - value : value) + (_cycle * (_duration + _repeatDelay)), suppressEvents);
 		}
 		
-		public function totalProgress(value:Number) {
-			return (!arguments.length) ? _totalTime / totalDuration() : totalTime( totalDuration() * value, false);
+		public function totalProgress(value:Number, suppressEvents:Boolean) {
+			return (!arguments.length) ? _totalTime / totalDuration() : totalTime( totalDuration() * value, suppressEvents);
 		}
 		
 		public function time(value:Number, suppressEvents:Boolean) {

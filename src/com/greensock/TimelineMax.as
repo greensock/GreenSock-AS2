@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.16
- * DATE: 2013-09-10
+ * VERSION: 12.1.0
+ * DATE: 2013-10-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.0.16";
+		public static var version:String = "12.1.0";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -119,14 +119,14 @@ class com.greensock.TimelineMax extends TimelineLite {
 				if (!_reversed) if (!_hasPausedChild()) {
 					isComplete = true;
 					callback = "onComplete";
-					if (_duration === 0) if (time === 0 || _rawPrevTime < 0) if (_rawPrevTime !== time && _first) { //In order to accommodate zero-duration timelines, we must discern the momentum/direction of time in order to render values properly when the "playhead" goes past 0 in the forward direction or lands directly on it, and also when it moves past it in the backward direction (from a postitive time to a negative time).
+					if (_duration === 0) if (time === 0 || _rawPrevTime < 0 || _rawPrevTime === _tinyNum) if (_rawPrevTime !== time && _first) {
 						internalForce = true;
-						if (_rawPrevTime > 0) {
+						if (_rawPrevTime > _tinyNum) {
 							callback = "onReverseComplete";
 						}
 					}
 				}
-				_rawPrevTime = time;
+				_rawPrevTime = (_duration || !suppressEvents || time !== 0) ? time : _tinyNum; //when the playhead arrives at EXACTLY time 0 (right on top) of a zero-duration timeline or tween, we need to discern if events are suppressed so that when the playhead moves again (next time), it'll trigger the callback. If events are NOT suppressed, obviously the callback would be triggered in this render. Basically, the callback should fire either when the playhead ARRIVES or LEAVES this exact spot, not both. Imagine doing a timeline.seek(0) and there's a callback that sits at 0. Since events are suppressed on that seek() by default, nothing will fire, but when the playhead moves off of that position, the callback should fire. This behavior is what people intuitively expect. We set the _rawPrevTime to be a precise tiny number to indicate this scenario rather than using another property/variable which would increase memory usage. This technique is less readable, but more efficient.
 				if (_yoyo && (_cycle & 1) != 0) {
 					_time = time = 0;
 				} else {
@@ -139,7 +139,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 					_totalTime = _cycle = 0;
 				}
 				_time = 0;
-				if (prevTime != 0 || (_duration == 0 && _rawPrevTime > 0 && !_locked)) {
+				if (prevTime != 0 || (_duration == 0 && (_rawPrevTime > _tinyNum || (time < 0 && _rawPrevTime >= 0)) && !_locked)) {
 					callback = "onReverseComplete";
 					isComplete = _reversed;
 				}
@@ -150,7 +150,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 					}
 					_rawPrevTime = time;
 				} else {
-					_rawPrevTime = time;
+					_rawPrevTime = (_duration || !suppressEvents || time !== 0) ? time : _tinyNum; //when the playhead arrives at EXACTLY time 0 (right on top) of a zero-duration timeline or tween, we need to discern if events are suppressed so that when the playhead moves again (next time), it'll trigger the callback. If events are NOT suppressed, obviously the callback would be triggered in this render. Basically, the callback should fire either when the playhead ARRIVES or LEAVES this exact spot, not both. Imagine doing a timeline.seek(0) and there's a callback that sits at 0. Since events are suppressed on that seek() by default, nothing will fire, but when the playhead moves off of that position, the callback should fire. This behavior is what people intuitively expect. We set the _rawPrevTime to be a precise tiny number to indicate this scenario rather than using another property/variable which would increase memory usage. This technique is less readable, but more efficient.
 					time = 0;
 					if (!_initted) {
 						internalForce = true;
@@ -158,6 +158,9 @@ class com.greensock.TimelineMax extends TimelineLite {
 				}
 				
 			} else {
+				if (_duration === 0 && _rawPrevTime < 0) { //without this, zero-duration repeating timelines (like with a simple callback nested at the very beginning and a repeatDelay) wouldn't render the first time through.
+					internalForce = true;
+				}
 				_time = _rawPrevTime = time;
 				if (!_locked) {
 					_totalTime = time;
@@ -378,12 +381,12 @@ class com.greensock.TimelineMax extends TimelineLite {
 		
 //---- GETTERS / SETTERS -------------------------------------------------------------------------------------------------------
 		
-		public function progress(value:Number) {
-			return (!arguments.length) ? _time / duration() : totalTime( duration() * ((_yoyo && (_cycle & 1) !== 0) ? 1 - value : value) + (_cycle * (_duration + _repeatDelay)), false);
+		public function progress(value:Number, suppressEvents:Boolean) {
+			return (!arguments.length) ? _time / duration() : totalTime( duration() * ((_yoyo && (_cycle & 1) !== 0) ? 1 - value : value) + (_cycle * (_duration + _repeatDelay)), suppressEvents);
 		}
 		
-		public function totalProgress(value:Number) {
-			return (!arguments.length) ? _totalTime / totalDuration() : totalTime( totalDuration() * value, false);
+		public function totalProgress(value:Number, suppressEvents:Boolean) {
+			return (!arguments.length) ? _totalTime / totalDuration() : totalTime( totalDuration() * value, suppressEvents);
 		}
 		
 		public function totalDuration(value:Number) {

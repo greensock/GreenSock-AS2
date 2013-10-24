@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0.13
- * DATE: 2013-07-10
+ * VERSION: 12.1.0
+ * DATE: 2013-10-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -16,12 +16,14 @@ import com.greensock.core.SimpleTimeline;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.core.Animation {
-		public static var version:String = "12.0.13";
+		public static var version:String = "12.1.0";
 		public static var ticker:MovieClip = _jumpStart(_root);
 		private static var _rootFrame:Number = -1;
 		public static var _rootTimeline:SimpleTimeline;
 		public static var _rootFramesTimeline:SimpleTimeline;
 		private static var _onTick:Array = [];
+		private static var _tinyNum:Number = 0.0000000001;
+
 		private var _onUpdate:Function; 
 		public var _delay:Number; 
 		public var _rawPrevTime:Number;
@@ -129,9 +131,15 @@ class com.greensock.core.Animation {
 			return this;
 		}
 		
+		public function isActive():Boolean {
+			var tl:SimpleTimeline = _timeline, //the 2 root timelines won't have a _timeline; they're always active.
+				rawTime:Number;
+			return ((tl == null) || (!_gc && !_paused && tl.isActive() && (rawTime = tl.rawTime()) >= _startTime && rawTime < _startTime + totalDuration() / _timeScale));
+		}
+		
 		public function _enabled(enabled:Boolean, ignoreTimeline:Boolean):Boolean {
 			_gc = !enabled; //note: it is possible for _gc to be true and timeline not to be null in situations where a parent TimelineLite/Max has completed and is removed - the developer might hold a reference to that timeline and later restart() it or something. 
-			_active = (enabled && !_paused && _totalTime > 0 && _totalTime < _totalDuration);
+			_active = isActive();
 			if (ignoreTimeline != true) {
 				if (enabled && timeline == null) {
 					_timeline.add(this, _startTime - _delay);
@@ -345,11 +353,19 @@ class com.greensock.core.Animation {
 				if (_gc) {
 					_enabled(true, false);
 				}
-				if (_totalTime != time) {
+				if (_totalTime !== time || _duration === 0) {
 					render(time, suppressEvents, false);
 				}
 			}
 			return this;
+		}
+		
+		public function progress(value:Number, suppressEvents:Boolean) {
+			return (!arguments.length) ? _time / duration() : totalTime(duration() * value, suppressEvents);
+		}
+		
+		public function totalProgress(value:Number, suppressEvents:Boolean) {
+			return (!arguments.length) ? _time / duration() : totalTime(duration() * value, suppressEvents);
 		}
 		
 		public function startTime(value:Number) {
@@ -403,7 +419,7 @@ class com.greensock.core.Animation {
 				_pauseTime = (value) ? raw : NaN;
 				_paused = value;
 				_active = Boolean(!value && _totalTime > 0 && _totalTime < _totalDuration);
-				if (!value && elapsed !== 0 && _duration !== 0) {
+				if (!value && elapsed !== 0 && _initted && duration() !== 0) {
 					render((_timeline.smoothChildTiming ? _totalTime : (raw - _startTime) / _timeScale), true, true); //in case the target's properties changed via some other tween or manual update by the user, we should force a render.
 				}
 			}
