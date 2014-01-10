@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.1.0
- * DATE: 2013-10-21
+ * VERSION: 12.1.2
+ * DATE: 2013-12-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.1.0";
+		public static var version:String = "12.1.2";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -76,10 +76,11 @@ class com.greensock.TimelineMax extends TimelineLite {
 				copy[p] = vars[p];
 			}
 			copy.time = _parseTimeOrLabel(position);
-			var t:TweenLite = new TweenLite(this, (Math.abs(Number(copy.time) - _time) / _timeScale) || 0.001, copy);
+			var duration:Number = (Math.abs(Number(copy.time) - _time) / _timeScale) || 0.001;
+			var t:TweenLite = new TweenLite(this, duration, copy);
 			copy.onStart = function():Void {
 				t.target.paused(true);
-				if (t.vars.time != t.target.time()) { //don't make the duration zero - if it's supposed to be zero, don't worry because it's already initting the tween and will complete immediately, effectively making the duration zero anyway. If we make duration zero, the tween won't run at all.
+				if (t.vars.time != t.target.time() && duration === t.duration()) { //don't make the duration zero - if it's supposed to be zero, don't worry because it's already initting the tween and will complete immediately, effectively making the duration zero anyway. If we make duration zero, the tween won't run at all.
 					t.duration( Math.abs( t.vars.time - t.target.time()) / t.target._timeScale );
 				}
 				if (vars.onStart) { //in case the user had an onStart in the vars - we don't want to overwrite it.
@@ -131,7 +132,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 					_time = time = 0;
 				} else {
 					_time = _duration;
-					time = _duration + 0.000001; //to avoid occasional floating point rounding errors in Flash - sometimes child tweens/timelines were not being fully completed (their progress might be 0.999999999999998 instead of 1 because when Flash performed _time - tween._startTime, floating point errors would return a value that was SLIGHTLY off)
+					time = _duration + 0.0001; //to avoid occasional floating point rounding errors in Flash - sometimes child tweens/timelines were not being fully completed (their progress might be 0.999999999999998 instead of 1 because when Flash performed _time - tween._startTime, floating point errors would return a value that was SLIGHTLY off)
 				}
 				
 			} else if (time < 0.0000001) { //to work around occasional floating point math artifacts, round super small values to 0. 
@@ -176,7 +177,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 						}
 						if (_time > _duration) {
 							_time = _duration;
-							time = _duration + 0.000001; //to avoid occasional floating point rounding errors in Flash - sometimes child tweens/timelines were not being fully completed (their progress might be 0.999999999999998 instead of 1 because when Flash performed _time - tween._startTime, floating point errors would return a value that was SLIGHTLY off)
+							time = _duration + 0.0001; //to avoid occasional floating point rounding errors in Flash - sometimes child tweens/timelines were not being fully completed (their progress might be 0.999999999999998 instead of 1 because when Flash performed _time - tween._startTime, floating point errors would return a value that was SLIGHTLY off)
 						} else if (_time < 0) {
 							_time = time = 0;
 						} else {
@@ -221,7 +222,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 					}
 				}
 				if (wrap) {
-					prevTime = (backwards) ? _duration + 0.000001 : -0.000001;
+					prevTime = (backwards) ? _duration + 0.0001 : -0.0001;
 					render(prevTime, true, false);
 				}
 				_locked = false;

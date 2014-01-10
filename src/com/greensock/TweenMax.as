@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.1.1
- * DATE: 2013-10-29
+ * VERSION: 12.1.2
+ * DATE: 2013-12-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.1.1";
+		public static var version:String = "12.1.2";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero
@@ -75,7 +75,7 @@ class com.greensock.TweenMax extends TweenLite {
 		
 		public function updateTo(vars:Object, resetDuration:Boolean) {
 			var curRatio:Number = ratio;
-			if (resetDuration) if (timeline != null) if (_startTime < _timeline._time) {
+			if (resetDuration) if (_startTime < _timeline._time) {
 				_startTime = _timeline._time;
 				_uncache(false);
 				if (_gc) {
@@ -91,6 +91,9 @@ class com.greensock.TweenMax extends TweenLite {
 				if (resetDuration) {
 					_initted = false;
 				} else {
+					if (_gc) {
+						_enabled(true, false);
+					}
 					if (_notifyPluginsOfEnabled && _firstPT) {
 						_onPluginEvent("_onDisable", this); //in case a plugin like MotionBlur must perform some cleanup tasks
 					}
@@ -269,7 +272,7 @@ class com.greensock.TweenMax extends TweenLite {
 				if (time < 0 && _startAt != null && _startTime != 0) { //if the tween is positioned at the VERY beginning (_startTime 0) of its parent timeline, it's illegal for the playhead to go back further, so we should not render the recorded startAt values.
 					_startAt.render(time, suppressEvents, force); //note: for performance reasons, we tuck this conditional logic inside less traveled areas (most tweens don't have an onUpdate). We'd just have it at the end before the onComplete, but the values should be updated before any onUpdate is called, so we ALSO put it here and then if it's not called, we do so later near the onComplete.
 				}
-				if (!suppressEvents) {
+				if (!suppressEvents) if (_totalTime !== prevTotalTime || isComplete) {
 					_onUpdate.apply(vars.onUpdateScope || this, vars.onUpdateParams);
 				}
 			}

@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.0
- * DATE: 2012-02-14
+ * VERSION: 12.0.1
+ * DATE: 2013-12-26
  * AS2
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -39,7 +39,7 @@ class com.greensock.plugins.QuaternionsPlugin extends TweenPlugin {
 		public function _initQuaternion(end:Object, p:String):Void {
 			var angle:Number, q1:Object, q2:Object, x1:Number, x2:Number, y1:Number, y2:Number, z1:Number, z2:Number, w1:Number, w2:Number, theta:Number;
 			var isFunc:Boolean = (typeof(_target[p]) == "function");
-			q1 = (!isFunc) ? Number(_target[p]) : _target[ ((p.indexOf("set") || typeof(_target["get" + p.substr(3)]) !== "function") ? p : "get" + p.substr(3)) ]();
+			q1 = (!isFunc) ? _target[p] : _target[ ((p.indexOf("set") || typeof(_target["get" + p.substr(3)]) !== "function") ? p : "get" + p.substr(3)) ]();
 			q2 = end;
 			x1 = q1.x; x2 = q2.x;
 			y1 = q1.y; y2 = q2.y;

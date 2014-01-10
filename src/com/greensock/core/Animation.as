@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.1.0
- * DATE: 2013-10-21
+ * VERSION: 12.1.2
+ * DATE: 2013-12-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -16,7 +16,7 @@ import com.greensock.core.SimpleTimeline;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.core.Animation {
-		public static var version:String = "12.1.0";
+		public static var version:String = "12.1.2";
 		public static var ticker:MovieClip = _jumpStart(_root);
 		private static var _rootFrame:Number = -1;
 		public static var _rootTimeline:SimpleTimeline;
@@ -400,7 +400,7 @@ class com.greensock.core.Animation {
 			}
 			if (value != _reversed) {
 				_reversed = value;
-				totalTime(_totalTime, true);
+				totalTime(((_timeline && !_timeline.smoothChildTiming) ? totalDuration() - _totalTime : _totalTime), true);
 			}
 			return this;
 		}
