@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.1.2
- * DATE: 2013-12-21
+ * VERSION: 12.1.3
+ * DATE: 2014-02-20
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -17,12 +17,12 @@ import com.greensock.plugins.*;
  * 	  
  * <p><strong>See AS3 files for full ASDocs</strong></p>
  * 
- * <p><strong>Copyright 2008-2013, GreenSock. All rights reserved.</strong> This work is subject to the terms in <a href="http://www.greensock.com/terms_of_use.html">http://www.greensock.com/terms_of_use.html</a> or for <a href="http://www.greensock.com/club/">Club GreenSock</a> members, the software agreement that was issued with the membership.</p>
+ * <p><strong>Copyright 2008-2014, GreenSock. All rights reserved.</strong> This work is subject to the terms in <a href="http://www.greensock.com/terms_of_use.html">http://www.greensock.com/terms_of_use.html</a> or for <a href="http://www.greensock.com/club/">Club GreenSock</a> members, the software agreement that was issued with the membership.</p>
  * 
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.1.2";
+		public static var version:String = "12.1.3";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero

@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.1.2
- * DATE: 2013-12-21
+ * VERSION: 12.1.3
+ * DATE: 2014-02-20
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -13,12 +13,12 @@ import com.greensock.core.Animation;
  * 
  * <p><strong>See AS3 files for full ASDocs</strong></p>
  * 
- * <p><strong>Copyright 2008-2013, GreenSock. All rights reserved.</strong> This work is subject to the terms in <a href="http://www.greensock.com/terms_of_use.html">http://www.greensock.com/terms_of_use.html</a> or for <a href="http://www.greensock.com/club/">Club GreenSock</a> members, the software agreement that was issued with the membership.</p>
+ * <p><strong>Copyright 2008-2014, GreenSock. All rights reserved.</strong> This work is subject to the terms in <a href="http://www.greensock.com/terms_of_use.html">http://www.greensock.com/terms_of_use.html</a> or for <a href="http://www.greensock.com/club/">Club GreenSock</a> members, the software agreement that was issued with the membership.</p>
  * 
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.1.2";
+		public static var version:String = "12.1.3";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -179,15 +179,15 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 			
 			super.add(value, position);
 			
-			//if the timeline has already ended but the inserted tween/timeline extends the duration, we should enable this timeline again so that it renders properly.  
-			if (_gc) if (!_paused) if (_duration < duration()) {
+			//if the timeline has already ended but the inserted tween/timeline extends the duration, we should enable this timeline again so that it renders properly. We should also align the playhead with the parent timeline's when appropriate.
+			if (_gc || _time === _duration) if (!_paused) if (_duration < duration()) {
 				//in case any of the anscestors had completed but should now be enabled...
 				var tl:SimpleTimeline = this,
 					beforeRawTime:Boolean = (tl.rawTime() > value._startTime); //if the tween is placed on the timeline so that it starts BEFORE the current rawTime, we should align the playhead (move the timeline). This is because sometimes users will create a timeline, let it finish, and much later append a tween and expect it to run instead of jumping to its end state. While technically one could argue that it should jump to its end state, that's not what users intuitively expect.
-				while (tl._gc && tl._timeline) {
-					if (tl._timeline.smoothChildTiming && beforeRawTime) {
+				while (tl._timeline) {
+					if (beforeRawTime && tl._timeline.smoothChildTiming) {
 						tl.totalTime(tl._totalTime, true); //moves the timeline (shifts its startTime) if necessary, and also enables it. 
-					} else {
+					} else if (tl._gc) {
 						tl._enabled(true, false);
 					}
 					tl = tl._timeline;
@@ -215,7 +215,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		public function _remove(tween:Animation, skipDisable:Boolean) {
 			super._remove(tween, skipDisable);
 			if (!_last) {
-				_time = _totalTime = 0;
+				_time = _totalTime = _duration = _totalDuration = 0;
 			} else if (_time > _last._startTime + _last._totalDuration / _last._timeScale) {
 				_time = duration();
 				_totalTime = _totalDuration;

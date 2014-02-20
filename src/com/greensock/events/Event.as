@@ -8,7 +8,7 @@
 /**
  * Event object to be used by GreenSock's AS2 EventDispatcher.
  * 
- * <b>Copyright 2011, GreenSock. All rights reserved.</b> This work is subject to the terms in <a href="http://www.greensock.com/eula.html">http://www.greensock.com/eula.html</a> or for "Business Green" Club GreenSock members, the software agreement that was issued with the business membership.
+ * <b>Copyright 2014, GreenSock. All rights reserved.</b> This work is subject to the terms in <a href="http://www.greensock.com/eula.html">http://www.greensock.com/eula.html</a> or for "Business Green" Club GreenSock members, the software agreement that was issued with the business membership.
  * 
  * @author Jack Doyle, jack@greensock.com
  */
