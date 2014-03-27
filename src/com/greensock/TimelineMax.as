@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.1.3
- * DATE: 2014-02-20
+ * VERSION: 12.1.4
+ * DATE: 2014-03-21
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.1.3";
+		public static var version:String = "12.1.4";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -127,7 +127,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 						}
 					}
 				}
-				_rawPrevTime = (_duration || !suppressEvents || time !== 0) ? time : _tinyNum; //when the playhead arrives at EXACTLY time 0 (right on top) of a zero-duration timeline or tween, we need to discern if events are suppressed so that when the playhead moves again (next time), it'll trigger the callback. If events are NOT suppressed, obviously the callback would be triggered in this render. Basically, the callback should fire either when the playhead ARRIVES or LEAVES this exact spot, not both. Imagine doing a timeline.seek(0) and there's a callback that sits at 0. Since events are suppressed on that seek() by default, nothing will fire, but when the playhead moves off of that position, the callback should fire. This behavior is what people intuitively expect. We set the _rawPrevTime to be a precise tiny number to indicate this scenario rather than using another property/variable which would increase memory usage. This technique is less readable, but more efficient.
+				_rawPrevTime = (_duration || !suppressEvents || time !== 0 || _rawPrevTime === time) ? time : _tinyNum; //when the playhead arrives at EXACTLY time 0 (right on top) of a zero-duration timeline or tween, we need to discern if events are suppressed so that when the playhead moves again (next time), it'll trigger the callback. If events are NOT suppressed, obviously the callback would be triggered in this render. Basically, the callback should fire either when the playhead ARRIVES or LEAVES this exact spot, not both. Imagine doing a timeline.seek(0) and there's a callback that sits at 0. Since events are suppressed on that seek() by default, nothing will fire, but when the playhead moves off of that position, the callback should fire. This behavior is what people intuitively expect. We set the _rawPrevTime to be a precise tiny number to indicate this scenario rather than using another property/variable which would increase memory usage. This technique is less readable, but more efficient.
 				if (_yoyo && (_cycle & 1) != 0) {
 					_time = time = 0;
 				} else {
@@ -140,7 +140,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 					_totalTime = _cycle = 0;
 				}
 				_time = 0;
-				if (prevTime != 0 || (_duration == 0 && (_rawPrevTime > _tinyNum || (time < 0 && _rawPrevTime >= 0)) && !_locked)) {
+				if (prevTime !== 0 || (_duration === 0 && _rawPrevTime !== _tinyNum && (_rawPrevTime > 0 || (time < 0 && _rawPrevTime >= 0)) && !_locked)) {
 					callback = "onReverseComplete";
 					isComplete = _reversed;
 				}
@@ -151,7 +151,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 					}
 					_rawPrevTime = time;
 				} else {
-					_rawPrevTime = (_duration || !suppressEvents || time !== 0) ? time : _tinyNum; //when the playhead arrives at EXACTLY time 0 (right on top) of a zero-duration timeline or tween, we need to discern if events are suppressed so that when the playhead moves again (next time), it'll trigger the callback. If events are NOT suppressed, obviously the callback would be triggered in this render. Basically, the callback should fire either when the playhead ARRIVES or LEAVES this exact spot, not both. Imagine doing a timeline.seek(0) and there's a callback that sits at 0. Since events are suppressed on that seek() by default, nothing will fire, but when the playhead moves off of that position, the callback should fire. This behavior is what people intuitively expect. We set the _rawPrevTime to be a precise tiny number to indicate this scenario rather than using another property/variable which would increase memory usage. This technique is less readable, but more efficient.
+					_rawPrevTime = (_duration || !suppressEvents || time !== 0 || _rawPrevTime === time) ? time : _tinyNum; //when the playhead arrives at EXACTLY time 0 (right on top) of a zero-duration timeline or tween, we need to discern if events are suppressed so that when the playhead moves again (next time), it'll trigger the callback. If events are NOT suppressed, obviously the callback would be triggered in this render. Basically, the callback should fire either when the playhead ARRIVES or LEAVES this exact spot, not both. Imagine doing a timeline.seek(0) and there's a callback that sits at 0. Since events are suppressed on that seek() by default, nothing will fire, but when the playhead moves off of that position, the callback should fire. This behavior is what people intuitively expect. We set the _rawPrevTime to be a precise tiny number to indicate this scenario rather than using another property/variable which would increase memory usage. This technique is less readable, but more efficient.
 					time = 0;
 					if (!_initted) {
 						internalForce = true;

@@ -99,7 +99,7 @@ class com.greensock.core.Animation {
 		}
 		
 		public function resume(from, suppressEvents:Boolean) {
-			if (arguments.length) {
+			if (from != null) {
 				seek(from, suppressEvents);
 			}
 			return paused(false);
@@ -116,7 +116,7 @@ class com.greensock.core.Animation {
 		}
 		
 		public function reverse(from, suppressEvents:Boolean) {
-			if (arguments.length) {
+			if (from != null) {
 				seek((from || totalDuration()), suppressEvents);
 			}
 			reversed(true);

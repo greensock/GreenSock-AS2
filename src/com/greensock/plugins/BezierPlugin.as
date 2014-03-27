@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.13
- * DATE: 2013-03-25
+ * VERSION: 12.14
+ * DATE: 2014-03-12
  * AS2
  * UPDATES & DOCS AT: http://www.greensock.com
  **/
@@ -41,6 +41,8 @@ class com.greensock.plugins.BezierPlugin extends TweenPlugin {
 		private var _segCount:Number;
 		private var _prec:Number;
 		private var _timeRes:Number;
+		private var _initialRotations:Array;
+		private var _startRatio:Number;
 		
 		
 		public function BezierPlugin() {
@@ -93,6 +95,7 @@ class com.greensock.plugins.BezierPlugin extends TweenPlugin {
 			}
 			
 			if ((ar = this._autoRotate)) {
+				this._initialRotations = [];
 				if (!(ar[0] instanceof Array)) {
 					this._autoRotate = ar = [ar];
 				}
@@ -102,8 +105,11 @@ class com.greensock.plugins.BezierPlugin extends TweenPlugin {
 						p = ar[i][j];
 						this._func[p] = (typeof(target[p]) === "function") ? target[ ((p.indexOf("set") || typeof(target["get" + p.substr(3)]) !== "function") ? p : "get" + p.substr(3)) ] : false;
 					}
+					p = ar[i][2];
+					this._initialRotations[i] = this._func[p] ? this._func[p]() : this._target[p];
 				}
 			}
+			this._startRatio = tween.vars.runBackwards ? 1 : 0;
 			return true;
 		}
 		
@@ -433,6 +439,7 @@ class com.greensock.plugins.BezierPlugin extends TweenPlugin {
 			var segments:Number = this._segCount,
 				func:Object = this._func,
 				target:Object = this._target,
+				notStart = (v !== this._startRatio),
 				curIndex:Number, inv:Number, i:Number, p:String, b:Segment, t:Number, val:Number, l:Number, lengths:Array, curSeg:Array;
 			if (this._timeRes == 0) {
 				curIndex = (v < 0) ? 0 : (v >= 1) ? segments - 1 : (segments * v) >> 0;
@@ -522,7 +529,7 @@ class com.greensock.plugins.BezierPlugin extends TweenPlugin {
 					y1 += (y2 - y1) * t;
 					y2 += ((b2.c + (b2.d - b2.c) * t) - y2) * t;
 					
-					val = Math.atan2(y2 - y1, x2 - x1) * conv + add;
+					val = notStart ? Math.atan2(y2 - y1, x2 - x1) * conv + add : this._initialRotations[i];
 					
 					if (func[p]) {
 						target[p](val);
