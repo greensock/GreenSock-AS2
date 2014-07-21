@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.1.4
- * DATE: 2014-03-21
+ * VERSION: 12.1.5
+ * DATE: 2014-07-19
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinelite/
  **/
@@ -18,7 +18,7 @@ import com.greensock.core.Animation;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineLite extends SimpleTimeline {
-		public static var version:String = "12.1.4";
+		public static var version:String = "12.1.5";
 		private static var _paramProps:Array = ["onStartParams","onUpdateParams","onCompleteParams","onReverseCompleteParams","onRepeatParams"];
 		private var _labels:Object;
 		
@@ -331,7 +331,7 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 				}
 				if (time < 0) {
 					_active = false;
-					if (_duration == 0) if (_rawPrevTime >= 0 && _first) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
+					if (_rawPrevTime >= 0 && _first) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
 						internalForce = true;
 					}
 					_rawPrevTime = time;
@@ -451,14 +451,22 @@ class com.greensock.TimelineLite extends SimpleTimeline {
 		}
 		
 		public function getTweensOf(target:Object, nested:Boolean):Array {
-			var tweens:Array = TweenLite.getTweensOf(target), 
-				i:Number = tweens.length, 
-				a:Array = [], 
-				cnt:Number = 0;
+			var disabled:Boolean = this._gc,
+				a:Array = [],
+				cnt:Number = 0,
+				tweens:Array, i:Number;
+			if (disabled) {
+				_enabled(true, true); //getTweensOf() filters out disabled tweens, and we have to mark them as _gc = true when the timeline completes in order to allow clean garbage collection, so temporarily re-enable the timeline here.
+			}
+			tweens = TweenLite.getTweensOf(target);
+			i = tweens.length;
 			while (--i > -1) {
-				if (tweens[i].timeline == this || (nested && _contains(tweens[i]))) {
+				if (tweens[i].timeline === this || (nested && _contains(tweens[i]))) {
 					a[cnt++] = tweens[i];
 				}
+			}
+			if (disabled) {
+				_enabled(false, true);
 			}
 			return a;
 		}

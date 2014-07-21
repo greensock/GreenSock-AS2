@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.1.4
- * DATE: 2014-03-21
+ * VERSION: 12.1.5
+ * DATE: 2014-07-19
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com/timelinemax/
  **/
@@ -22,7 +22,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TimelineMax extends TimelineLite {
-		public static var version:String = "12.1.4";
+		public static var version:String = "12.1.5";
 		private static var _easeNone:Ease = new Ease(null, null, 1, 0);
 		private var _repeat:Number;
 		private var _repeatDelay:Number;
@@ -146,7 +146,7 @@ class com.greensock.TimelineMax extends TimelineLite {
 				}
 				if (time < 0) {
 					_active = false;
-					if (_duration == 0) if (_rawPrevTime >= 0 && _first) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
+					if (_rawPrevTime >= 0 && _first) { //zero-duration timelines are tricky because we must discern the momentum/direction of time in order to determine whether the starting values should be rendered or the ending values. If the "playhead" of its timeline goes past the zero-duration tween in the forward direction or lands directly on it, the end values should be rendered, but if the timeline's "playhead" moves past it in the backward direction (from a postitive time to a negative time), the starting values must be rendered.
 						internalForce = true;
 					}
 					_rawPrevTime = time;

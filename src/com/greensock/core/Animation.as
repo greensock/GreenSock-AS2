@@ -1,6 +1,6 @@
 /**
- * VERSION: 12.1.2
- * DATE: 2013-12-21
+ * VERSION: 12.1.3
+ * DATE: 2014-07-09
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -16,7 +16,7 @@ import com.greensock.core.SimpleTimeline;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.core.Animation {
-		public static var version:String = "12.1.2";
+		public static var version:String = "12.1.3";
 		public static var ticker:MovieClip = _jumpStart(_root);
 		private static var _rootFrame:Number = -1;
 		public static var _rootTimeline:SimpleTimeline;
@@ -233,7 +233,8 @@ class com.greensock.core.Animation {
 			while (mc.getInstanceAtDepth(l)) {
 				l++;
 			}
-			ticker = mc.createEmptyMovieClip("_gsAnimation" + String(version).split(".").join("_"), l);
+			var tickerName:String = "_gsAnimation" + String(version).split(".").join("_");
+			ticker = mc[tickerName] || mc.createEmptyMovieClip(tickerName, l);
 			ticker.onEnterFrame = _tick;
 			ticker.addEventListener = _addTickListener;
 			ticker.removeEventListener = _removeTickListener;

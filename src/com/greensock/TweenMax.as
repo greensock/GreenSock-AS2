@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.1.4
- * DATE: 2014-03-21
+ * VERSION: 12.1.5
+ * DATE: 2014-07-19
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com 
  **/
@@ -22,7 +22,7 @@ import com.greensock.plugins.*;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenMax extends TweenLite {
-		public static var version:String = "12.1.4";
+		public static var version:String = "12.1.5";
 		private static var _activatedPlugins:Boolean = TweenPlugin.activate([
 			
 			AutoAlphaPlugin,			//tweens _alpha and then toggles "_visible" to false if/when _alpha is zero
@@ -422,7 +422,7 @@ class com.greensock.TweenMax extends TweenLite {
 				tween = a[i];
 				if (allTrue || (tween instanceof SimpleTimeline) || ((isDC = (TweenLite(tween).target == TweenLite(tween).vars.onComplete)) && delayedCalls) || (tweens && !isDC)) {
 					if (complete) {
-						tween.totalTime(Number(tween.totalDuration()));
+						tween.totalTime(tween._reversed ? 0 : Number(tween.totalDuration()));
 					} else {
 						tween._enabled(false, false);
 					}

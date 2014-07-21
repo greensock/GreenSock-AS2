@@ -1,6 +1,6 @@
 ﻿/**
- * VERSION: 12.1.4
- * DATE: 2014-03-21
+ * VERSION: 12.1.5
+ * DATE: 2014-07-19
  * AS2 (AS3 version is also available)
  * UPDATES AND DOCS AT: http://www.greensock.com
  **/
@@ -21,7 +21,7 @@ import com.greensock.easing.Ease;
  * @author Jack Doyle, jack@greensock.com
  */
 class com.greensock.TweenLite extends Animation {
-		public static var version:String = "12.1.4";
+		public static var version:String = "12.1.5";
 		public static var defaultEase:Ease = new Ease(null, null, 1, 1);
 		public static var defaultOverwrite:String = "auto";
 		public static var ticker:MovieClip = Animation.ticker;
@@ -122,6 +122,7 @@ class com.greensock.TweenLite extends Animation {
 						}
 					}
 					copy.overwrite = 0;
+					copy.data = "isFromStart"; //we tag the tween with as "isFromStart" so that if [inside a plugin] we need to only do something at the very END of a tween, we have a way of identifying this tween as merely the one that's setting the beginning values for a "from()" tween.
 					_startAt = TweenLite.to(target, 0, copy);
 					if (!immediate) {
 						_startAt.render(-1, true); //for tweens that aren't rendered immediately, we still need to use the _startAt to record the starting values so that we can revert to them if the parent timeline's playhead goes backward beyond the beginning, but we immediately revert the tween back otherwise the parent tween that's currently instantiating wouldn't see the wrong starting values (since they were changed by the _startAt tween) 
